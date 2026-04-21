@@ -71,6 +71,19 @@ pub enum ErrorCode {
     Macro = 7000,
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Bullet-range error code constants (mirrors JsonModel.h JID_BULLET_*)
+// ──────────────────────────────────────────────────────────────────────────────
+
+/// Bullet check-type mismatch (`JID_BULLET_CHECKTYPE = 3302`).
+pub const BULLET_CHECKTYPE: u32 = 3302;
+
+/// Bullet character-code mismatch (`JID_BULLET_CODE = 3303`).
+pub const BULLET_CODE: u32 = 3303;
+
+/// Bullet shape not in the allow-list (`JID_BULLET_SHAPES = 3304`).
+pub const BULLET_SHAPES: u32 = 3304;
+
 /// Specific error codes within the [`ErrorCode::Hyperlink`] (6900) range.
 pub mod hyperlink_codes {
     /// A run is flagged as a hyperlink but the spec forbids hyperlinks.
