@@ -26,6 +26,20 @@ pub enum DvcError {
     NotImplemented(&'static str),
 }
 
+/// Individual table error codes (within the `Table = 3000` range).
+///
+/// These mirror the `JID_TABLE_*` constants in `references/dvc/Source/JsonModel.h`.
+/// - `TABLE_BORDER_TYPE`  (3033) — outer border line-type mismatch
+/// - `TABLE_BORDER_SIZE`  (3034) — outer border width mismatch
+/// - `TABLE_BORDER_COLOR` (3035) — outer border color mismatch
+/// - `TABLE_TREAT_AS_CHAR` (3004) — `treatAsChar` attribute mismatch
+/// - `TABLE_IN_TABLE`     (3056) — nested table where policy forbids it
+pub const TABLE_BORDER_TYPE: u32 = 3033;
+pub const TABLE_BORDER_SIZE: u32 = 3034;
+pub const TABLE_BORDER_COLOR: u32 = 3035;
+pub const TABLE_TREAT_AS_CHAR: u32 = 3004;
+pub const TABLE_IN_TABLE: u32 = 3056;
+
 /// Error code ranges mirror the reference C++ implementation
 /// (see `references/dvc/Source/JsonModel.h`).
 ///

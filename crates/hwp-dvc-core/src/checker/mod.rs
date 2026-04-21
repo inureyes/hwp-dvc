@@ -10,6 +10,7 @@ pub mod macro_;
 pub mod para_shape;
 pub mod special_character;
 pub mod style;
+pub mod table;
 
 use crate::document::Document;
 use crate::error::DvcResult;
@@ -80,7 +81,7 @@ impl<'a> Checker<'a> {
 
     /// Run every enabled check and return the collected errors.
     ///
-    /// TODO: port `CheckTable`, `CheckOutlineShape`, `CheckBullet`,
+    /// TODO: port `CheckOutlineShape`, `CheckBullet`,
     /// `CheckParaNumBullet` from `references/dvc/Checker.cpp`.
     pub fn run(&self) -> DvcResult<Vec<DvcErrorInfo>> {
         let mut errors: Vec<DvcErrorInfo> = Vec::new();
@@ -123,6 +124,18 @@ impl<'a> Checker<'a> {
         // CheckParaShape — mirrors Checker::CheckParaShape.
         if let Some(parashape_spec) = &self.spec.parashape {
             errors.extend(para_shape::check(self.document, parashape_spec));
+        }
+
+        // CheckTable — mirrors Checker::CheckTable. Scope-gated.
+        if let Some(table_spec) = &self.spec.table {
+            if self.scope.all || self.scope.table || self.scope.table_detail {
+                errors.extend(table::check(
+                    self.document,
+                    table_spec,
+                    self.level,
+                    self.scope,
+                )?);
+            }
         }
 
         Ok(errors)
