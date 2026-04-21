@@ -86,6 +86,42 @@ impl HwpxArchive {
         header::parser::parse_header(&part.bytes)
     }
 
+    /// Return `true` when `Contents/content.hpf` contains an OPF manifest
+    /// item whose `href` attribute includes `.js`.
+    ///
+    /// This replicates `OWPMLReader::haveMacroInDocument` from the C++
+    /// reference. The function does not require `quick-xml` — it scans the
+    /// raw bytes with a lightweight string search, which is sufficient
+    /// because `href` values never use XML character references.
+    pub fn has_macro(&self) -> bool {
+        let part = match self.part("Contents/content.hpf") {
+            Some(p) => p,
+            None => return false,
+        };
+        // The OPF manifest looks like:
+        //   <opf:item id="script" href="Scripts/JScript.js" .../>
+        // We scan for every occurrence of `href="` and check whether the
+        // value before the closing `"` contains `.js`.
+        let text = match std::str::from_utf8(&part.bytes) {
+            Ok(s) => s,
+            Err(_) => return false,
+        };
+        let mut search = text;
+        while let Some(pos) = search.find("href=\"") {
+            search = &search[pos + 6..]; // skip past `href="`
+            if let Some(end) = search.find('"') {
+                let href = &search[..end];
+                if href.contains(".js") {
+                    return true;
+                }
+                search = &search[end + 1..];
+            } else {
+                break;
+            }
+        }
+        false
+    }
+
     /// Parse every `Contents/sectionN.xml` part in ascending numeric
     /// order and return one [`Section`] per part.
     ///
@@ -195,6 +231,20 @@ pub struct RunTypeInfo {
 }
 
 impl Document {
+    /// Return `true` when `Contents/content.hpf` lists at least one
+    /// `<opf:item>` whose `href` attribute contains `.js`.
+    ///
+    /// Mirrors `OWPMLReader::haveMacroInDocument` from the reference C++
+    /// source: it scans the OPF manifest for JavaScript items, which
+    /// HWP/HWPX uses to embed macro scripts.
+    ///
+    /// Returns `false` when the archive carries no `Contents/content.hpf`
+    /// part (the manifest is optional in older HWPX variants) or when the
+    /// manifest cannot be parsed.
+    pub fn has_macro(&self) -> bool {
+        self.archive.has_macro()
+    }
+
     pub fn open(path: impl AsRef<Path>) -> DvcResult<Self> {
         let archive = HwpxArchive::open(path)?;
         Ok(Self {

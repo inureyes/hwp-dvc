@@ -62,3 +62,10 @@ pub mod hyperlink_codes {
     /// A run is flagged as a hyperlink but the spec forbids hyperlinks.
     pub const HYPERLINK_PERMISSION: u32 = 6901;
 }
+
+/// Specific error codes in the [`ErrorCode::Macro`] (7000) range.
+pub mod macro_codes {
+    /// Macro script present in the document but `MacroSpec.permission`
+    /// is `false` — the document violates the policy.
+    pub const MACRO_PERMISSION: u32 = 7001;
+}
