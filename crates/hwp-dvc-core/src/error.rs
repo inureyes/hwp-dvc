@@ -74,3 +74,19 @@ pub mod macro_codes {
 pub const SPECIALCHAR_MIN: u32 = 3101;
 /// Special-character sub-codes within the `SpecialCharacter` (3100) range.
 pub const SPECIALCHAR_MAX: u32 = 3102;
+
+// ──────────────────────────────────────────────────────────────────────────────
+// CharShape-range error code constants (mirrors JsonModel.h JID_CHAR_SHAPE_*)
+// ──────────────────────────────────────────────────────────────────────────────
+
+/// Lang-type mismatch (`JID_CHAR_SHAPE_LANG = JID_CHAR_SHAPE + 3`).
+pub const CHARSHAPE_LANGTYPE: u32 = 1003;
+
+/// Font name not in the spec allow-list (`JID_CHAR_SHAPE_FONT = JID_CHAR_SHAPE + 4`).
+pub const CHARSHAPE_FONT: u32 = 1004;
+
+/// Ratio value outside the allowed range (`JID_CHAR_SHAPE_RATIO = JID_CHAR_SHAPE + 7`).
+pub const CHARSHAPE_RATIO: u32 = 1007;
+
+/// Spacing value outside the allowed range (`JID_CHAR_SHAPE_SPACING = JID_CHAR_SHAPE + 8`).
+pub const CHARSHAPE_SPACING: u32 = 1008;
