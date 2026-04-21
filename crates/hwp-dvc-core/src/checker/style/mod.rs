@@ -20,7 +20,7 @@
 
 use crate::checker::DvcErrorInfo;
 use crate::document::RunTypeInfo;
-use crate::error::ErrorCode;
+use crate::error::{ErrorContext, ErrorCode};
 use crate::spec::StyleSpec;
 
 /// Concrete error code emitted when a run uses a non-default style and
@@ -64,7 +64,7 @@ pub fn check(spec: &StyleSpec, runs: &[RunTypeInfo]) -> Vec<DvcErrorInfo> {
             is_in_shape: r.is_in_shape,
             use_hyperlink: r.is_hyperlink,
             use_style: true,
-            error_string: String::new(),
+            error_string: crate::error::error_string(STYLE_PERMISSION, ErrorContext::default()),
         })
         .collect()
 }

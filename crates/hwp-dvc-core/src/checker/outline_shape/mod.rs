@@ -54,8 +54,9 @@ use std::collections::HashSet;
 use crate::checker::DvcErrorInfo;
 use crate::document::header::types::enums::HeadingType;
 use crate::document::{Document, RunTypeInfo};
-use crate::error::outline_shape_codes::{
-    OUTLINESHAPE_LEVEL_NUMBERSHAPE, OUTLINESHAPE_LEVEL_NUMBERTYPE,
+use crate::error::{
+    outline_shape_codes::{OUTLINESHAPE_LEVEL_NUMBERSHAPE, OUTLINESHAPE_LEVEL_NUMBERTYPE},
+    ErrorContext,
 };
 use crate::spec::OutlineShapeSpec;
 
@@ -218,7 +219,7 @@ fn make_error(run: &RunTypeInfo, error_code: u32) -> DvcErrorInfo {
         is_in_shape: run.is_in_shape,
         use_hyperlink: run.is_hyperlink,
         use_style: run.is_style,
-        error_string: String::new(),
+        error_string: crate::error::error_string(error_code, ErrorContext::default()),
     }
 }
 

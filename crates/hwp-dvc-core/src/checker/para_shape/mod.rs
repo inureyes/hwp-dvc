@@ -37,9 +37,12 @@ use std::collections::HashSet;
 use crate::checker::DvcErrorInfo;
 use crate::document::header::LineSpacingType;
 use crate::document::{Document, RunTypeInfo};
-use crate::error::para_shape_codes::{
-    PARASHAPE_INDENT, PARASHAPE_LINESPACING, PARASHAPE_LINESPACINGVALUE, PARASHAPE_OUTDENT,
-    PARASHAPE_SPACINGPARABOTTOM, PARASHAPE_SPACINGPARAUP,
+use crate::error::{
+    para_shape_codes::{
+        PARASHAPE_INDENT, PARASHAPE_LINESPACING, PARASHAPE_LINESPACINGVALUE, PARASHAPE_OUTDENT,
+        PARASHAPE_SPACINGPARABOTTOM, PARASHAPE_SPACINGPARAUP,
+    },
+    ErrorContext,
 };
 use crate::spec::ParaShapeSpec;
 
@@ -151,7 +154,7 @@ fn make_error(run: &RunTypeInfo, error_code: u32) -> DvcErrorInfo {
         is_in_shape: run.is_in_shape,
         use_hyperlink: run.is_hyperlink,
         use_style: run.is_style,
-        error_string: String::new(),
+        error_string: crate::error::error_string(error_code, ErrorContext::default()),
     }
 }
 

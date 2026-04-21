@@ -46,7 +46,7 @@ use crate::checker::{CheckLevel, DvcErrorInfo, OutputScope};
 use crate::document::header::types::{Border, LineType};
 use crate::document::section::types::Table;
 use crate::document::{Document, HeaderTables};
-use crate::error::DvcResult;
+use crate::error::{DvcResult, ErrorContext};
 use crate::spec::BorderSpec;
 use crate::spec::TableSpec;
 
@@ -139,6 +139,7 @@ fn check_table(
             table_id: table.id,
             is_in_table: table.nesting_depth >= 1,
             is_in_table_in_table: table.nesting_depth >= 2,
+            error_string: crate::error::error_string(TABLE_IN_TABLE, ErrorContext::default()),
             ..Default::default()
         });
     }
@@ -162,6 +163,7 @@ fn check_border_from_info(
             error_code: TABLE_BORDER_TYPE,
             table_id: table.id,
             is_in_table: table.nesting_depth >= 1,
+            error_string: crate::error::error_string(TABLE_BORDER_TYPE, ErrorContext::default()),
             ..Default::default()
         });
         if level == CheckLevel::Simple {
@@ -176,6 +178,7 @@ fn check_border_from_info(
             error_code: TABLE_BORDER_SIZE,
             table_id: table.id,
             is_in_table: table.nesting_depth >= 1,
+            error_string: crate::error::error_string(TABLE_BORDER_SIZE, ErrorContext::default()),
             ..Default::default()
         });
         if level == CheckLevel::Simple {
@@ -190,6 +193,7 @@ fn check_border_from_info(
             error_code: TABLE_BORDER_COLOR,
             table_id: table.id,
             is_in_table: table.nesting_depth >= 1,
+            error_string: crate::error::error_string(TABLE_BORDER_COLOR, ErrorContext::default()),
             ..Default::default()
         });
         // TABLE_BORDER_COLOR is the last check in this function;

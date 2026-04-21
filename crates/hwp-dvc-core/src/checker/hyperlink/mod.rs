@@ -9,7 +9,7 @@
 
 use crate::checker::DvcErrorInfo;
 use crate::document::RunTypeInfo;
-use crate::error::ErrorCode;
+use crate::error::{ErrorContext, ErrorCode};
 use crate::spec::HyperlinkSpec;
 
 /// Error code for a forbidden hyperlink run.
@@ -46,7 +46,7 @@ pub fn check(spec: &HyperlinkSpec, run_type_infos: &[RunTypeInfo]) -> Vec<DvcErr
             is_in_shape: run.is_in_shape,
             use_hyperlink: true,
             use_style: false,
-            error_string: String::new(),
+            error_string: crate::error::error_string(HYPERLINK_PERMISSION, ErrorContext::default()),
         })
         .collect()
 }

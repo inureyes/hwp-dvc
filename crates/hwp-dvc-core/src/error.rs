@@ -1,4 +1,8 @@
+pub mod messages;
+
 use thiserror::Error;
+
+pub use messages::{error_string, ErrorContext};
 
 pub type DvcResult<T> = Result<T, DvcError>;
 

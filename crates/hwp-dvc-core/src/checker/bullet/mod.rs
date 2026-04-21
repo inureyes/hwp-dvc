@@ -36,7 +36,7 @@
 
 use crate::checker::DvcErrorInfo;
 use crate::document::header::{Bullet, HeaderTables};
-use crate::error::ErrorCode;
+use crate::error::{ErrorCode, ErrorContext};
 use crate::spec::BulletSpec;
 
 /// Bullet check-type mismatch (`JID_BULLET_CHECKTYPE = 3302`).
@@ -135,10 +135,14 @@ fn check_bullet_to_check_list(bullet: &Bullet, allowed: &str) -> Option<DvcError
     // level, not per-paragraph (see module-level TODO).
     // `error_string` carries the offending bullet character for
     // human-readable reporting.
+    let ctx = ErrorContext {
+        bullet_char: Some(&bullet.char),
+        ..ErrorContext::default()
+    };
     Some(DvcErrorInfo {
         para_pr_id_ref: 0,
         error_code: BULLET_SHAPES,
-        error_string: bullet.char.clone(),
+        error_string: crate::error::error_string(BULLET_SHAPES, ctx),
         // Base code in the Bullet range so callers can range-filter.
         // The error_code itself (3304) already encodes the range.
         table_id: ErrorCode::Bullet as u32, // 3300 — range marker
@@ -290,7 +294,12 @@ mod tests {
             "only one disallowed bullet; expected 1 error, got: {errors:?}"
         );
         assert_eq!(errors[0].error_code, BULLET_SHAPES);
-        assert_eq!(errors[0].error_string, "Z");
+        // error_string now contains the Korean message with the bullet char embedded.
+        assert!(
+            errors[0].error_string.contains('Z'),
+            "error_string must include the offending bullet char 'Z'; got: '{}'",
+            errors[0].error_string
+        );
     }
 
     // ── PUA characters are skipped ────────────────────────────────────────────
