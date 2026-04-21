@@ -4,6 +4,7 @@
 //! Maps to `Checker` in `references/dvc/Checker.h`. Each `Check*`
 //! method in the C++ version becomes an associated function here.
 
+pub mod bullet;
 pub mod char_shape;
 pub mod hyperlink;
 pub mod macro_;
@@ -142,6 +143,13 @@ impl<'a> Checker<'a> {
         // CheckOutlineShape — validate outline numbering shapes per level.
         if let Some(outline_spec) = &self.spec.outlineshape {
             errors.extend(outline_shape::check(self.document, outline_spec));
+        }
+
+        // CheckBullet — validate bullet characters against the spec allow-list.
+        if let Some(bullet_spec) = &self.spec.bullet {
+            if let Some(header) = &self.document.header {
+                errors.extend(bullet::check(bullet_spec, header));
+            }
         }
 
         Ok(errors)
