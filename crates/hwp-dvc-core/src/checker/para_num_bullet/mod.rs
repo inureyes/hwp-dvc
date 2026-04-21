@@ -41,7 +41,10 @@ use std::collections::HashSet;
 use crate::checker::DvcErrorInfo;
 use crate::document::header::{HeadingType, Numbering, ParaHead};
 use crate::document::{Document, RunTypeInfo};
-use crate::error::para_num_bullet_codes::{PARANUM_LEVEL_NUMBERSHAPE, PARANUM_LEVEL_NUMBERTYPE};
+use crate::error::{
+    para_num_bullet_codes::{PARANUM_LEVEL_NUMBERSHAPE, PARANUM_LEVEL_NUMBERTYPE},
+    ErrorContext,
+};
 use crate::spec::ParaNumBulletSpec;
 
 /// Validate every paragraph that uses paragraph numbering against the spec
@@ -213,7 +216,7 @@ fn make_error(run: &RunTypeInfo, error_code: u32) -> DvcErrorInfo {
         is_in_shape: run.is_in_shape,
         use_hyperlink: run.is_hyperlink,
         use_style: run.is_style,
-        error_string: String::new(),
+        error_string: crate::error::error_string(error_code, ErrorContext::default()),
     }
 }
 

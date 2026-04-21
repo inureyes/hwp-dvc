@@ -30,6 +30,7 @@
 use crate::checker::{CheckLevel, DvcErrorInfo};
 use crate::document::header::{CharShape, FontFace, HeaderTables};
 use crate::document::RunTypeInfo;
+use crate::error::ErrorContext;
 use crate::spec::CharShapeSpec;
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -84,6 +85,8 @@ struct ErrorInfo {
     char_pr_id: u32,
     /// One of the `CHARSHAPE_*` constants.
     error_code: u32,
+    /// Optional context for message formatting (e.g. the offending font name).
+    font_name: Option<String>,
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -126,6 +129,10 @@ pub fn check(
     'outer: for err in &intermediate {
         for run in run_type_infos {
             if run.char_pr_id_ref == err.char_pr_id {
+                let ctx = ErrorContext {
+                    font_name: err.font_name.as_deref(),
+                    ..ErrorContext::default()
+                };
                 results.push(DvcErrorInfo {
                     char_pr_id_ref: run.char_pr_id_ref,
                     para_pr_id_ref: run.para_pr_id_ref,
@@ -141,7 +148,7 @@ pub fn check(
                     is_in_shape: run.is_in_shape,
                     use_hyperlink: run.is_hyperlink,
                     use_style: run.is_style,
-                    error_string: String::new(),
+                    error_string: crate::error::error_string(err.error_code, ctx),
                 });
 
                 if level == CheckLevel::Simple {
@@ -205,9 +212,12 @@ fn check_char_shape_to_check_list(
         let doc_fonts = cs.font_names(font_faces);
         let any_allowed = doc_fonts.iter().any(|name| spec.font.contains(name));
         if !any_allowed {
+            // Capture the first document font name for the error message.
+            let font_name = doc_fonts.into_iter().next();
             errors.push(ErrorInfo {
                 char_pr_id: cs.id,
                 error_code: CHARSHAPE_FONT,
+                font_name,
             });
         }
     }
@@ -224,6 +234,7 @@ fn check_char_shape_to_check_list(
             errors.push(ErrorInfo {
                 char_pr_id: cs.id,
                 error_code: CHARSHAPE_RATIO,
+                font_name: None,
             });
         }
     }
@@ -239,6 +250,7 @@ fn check_char_shape_to_check_list(
             errors.push(ErrorInfo {
                 char_pr_id: cs.id,
                 error_code: CHARSHAPE_SPACING,
+                font_name: None,
             });
         }
     }
