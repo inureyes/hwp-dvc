@@ -130,6 +130,19 @@ pub mod outline_shape_codes {
     pub const OUTLINESHAPE_LEVEL_NUMBERSHAPE: u32 = 3207;
 }
 
+/// Paragraph-number-bullet error codes (3400-range).
+///
+/// These map to `JID_PARANUMBULLET_*` constants in
+/// `references/dvc/Source/JsonModel.h`.
+pub mod para_num_bullet_codes {
+    /// `JID_PARANUMBULLET_TYPE` — overall type mismatch (3401).
+    pub const PARANUM_TYPE: u32 = 3401;
+    /// `JID_PARANUMBULLET_LEVELTYPE_NUMBERTYPE` — level number-type mismatch (3406).
+    pub const PARANUM_LEVEL_NUMBERTYPE: u32 = 3406;
+    /// `JID_PARANUMBULLET_LEVELTYPE_NUMBERSHAPE` — level number-shape mismatch (3407).
+    pub const PARANUM_LEVEL_NUMBERSHAPE: u32 = 3407;
+}
+
 /// Individual paragraph-shape error codes (2000-range).
 ///
 /// These map to `JID_PARA_SHAPE_*` constants in the reference C++
