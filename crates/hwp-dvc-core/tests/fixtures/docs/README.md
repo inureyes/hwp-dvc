@@ -101,12 +101,12 @@ Legend for **Status**: ✅ authored / ⏳ pending.
 | `table_nested.hwpx`               |  ✅    | Table            | 3056 (table-in-table) |
 | `specialchar_pass.hwpx`           |  ✅    | SpecialCharacter | none                  |
 | `specialchar_fail_ctrl.hwpx`      |  ✅    | SpecialCharacter | 3101 (min-range)      |
-| `bullet_allowed.hwpx`             |  ⏳    | Bullet           | none                  |
-| `bullet_disallowed.hwpx`          |  ⏳    | Bullet           | 3304 (shapes)         |
-| `outline_multilevel.hwpx`         |  ⏳    | OutlineShape     | varies by level       |
-| `paranum_simple.hwpx`             |  ⏳    | ParaNumBullet    | varies by level       |
+| `bullet_allowed.hwpx`             |  ✅    | Bullet           | none                  |
+| `bullet_disallowed.hwpx`          |  ✅    | Bullet           | 3304 (shapes)         |
+| `outline_multilevel.hwpx`         |  ✅    | OutlineShape     | varies by level       |
+| `paranum_simple.hwpx`             |  ✅    | ParaNumBullet    | varies by level       |
 | `style_default_only.hwpx`         |  ✅    | Style            | none                  |
-| `style_custom.hwpx`               |  ⏳    | Style            | 3502 (permission)     |
+| `style_custom.hwpx`               |  ✅    | Style            | 3502 (permission)     |
 | `hyperlink_none.hwpx`             |  ✅    | Hyperlink        | none                  |
 | `hyperlink_external.hwpx`         |  ✅    | Hyperlink        | 6901 (permission)     |
 | `macro_none.hwpx`                 |  ✅    | Macro            | none                  |
