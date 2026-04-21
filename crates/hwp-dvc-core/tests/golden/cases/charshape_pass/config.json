@@ -1,0 +1,5 @@
+{
+  "fixture": "charshape_pass.hwpx",
+  "spec": "fixture_spec.json",
+  "description": "Clean CharShape fixture - expected to produce no charshape errors against fixture_spec.json"
+}

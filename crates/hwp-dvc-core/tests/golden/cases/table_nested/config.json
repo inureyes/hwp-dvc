@@ -1,0 +1,5 @@
+{
+  "fixture": "table_nested.hwpx",
+  "spec": "fixture_spec.json",
+  "description": "Fixture with a nested table - expected to produce TABLE_IN_TABLE (3056) error"
+}
