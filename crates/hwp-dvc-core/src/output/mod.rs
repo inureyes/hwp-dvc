@@ -1,21 +1,36 @@
 //! Output formatters for validation results.
 //!
-//! Maps to `IDVCOutput` / `DVCOutputJson` in the reference. Only JSON
-//! is implemented initially; XML and plain text can be added behind
-//! the same [`Format`] enum.
+//! Maps to `IDVCOutput` / `DVCOutputJson` in the reference. JSON is the
+//! default; XML is available when the `xml` Cargo feature is enabled.
+//!
+//! # Feature flags
+//!
+//! | Feature | Effect |
+//! |---------|--------|
+//! | *(none)* | JSON only (`Format::Json`, `to_json`) |
+//! | `xml` | Adds `Format::Xml` and `to_xml` |
+
+#[cfg(feature = "xml")]
+mod xml;
 
 use serde::Serialize;
 
 use crate::checker::DvcErrorInfo;
 use crate::error::DvcResult;
 
+/// Selects the serialization format for validation results.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Format {
     #[default]
     Json,
-    // Xml,   // TODO
-    // Text,  // TODO
+    /// XML output — only available when the `xml` feature is compiled in.
+    #[cfg(feature = "xml")]
+    Xml,
 }
+
+#[cfg(feature = "xml")]
+pub use xml::to_xml;
 
 #[derive(Debug, Serialize)]
 struct JsonRecord<'a> {

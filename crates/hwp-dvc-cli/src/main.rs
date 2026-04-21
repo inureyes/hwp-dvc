@@ -79,7 +79,8 @@ struct Cli {
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Format {
     Json,
-    // Xml, // not yet implemented
+    #[cfg(feature = "xml")]
+    Xml,
 }
 
 fn main() -> Result<()> {
@@ -118,6 +119,8 @@ fn main() -> Result<()> {
 
     let rendered = match cli.format {
         Format::Json => output::to_json(&errors, cli.pretty)?,
+        #[cfg(feature = "xml")]
+        Format::Xml => output::to_xml(&errors, cli.pretty)?,
     };
 
     if let Some(path) = cli.file.as_ref() {

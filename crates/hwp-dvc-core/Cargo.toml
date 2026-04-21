@@ -21,5 +21,9 @@ zip.workspace = true
 quick-xml.workspace = true
 tracing.workspace = true
 
+[features]
+## Enable the XML output formatter (`output::to_xml`, `output::Format::Xml`).
+xml = []
+
 [dev-dependencies]
 anyhow.workspace = true
