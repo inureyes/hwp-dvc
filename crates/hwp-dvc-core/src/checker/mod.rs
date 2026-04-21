@@ -9,6 +9,7 @@ pub mod char_shape;
 pub mod hyperlink;
 pub mod macro_;
 pub mod outline_shape;
+pub mod para_num_bullet;
 pub mod para_shape;
 pub mod special_character;
 pub mod style;
@@ -150,6 +151,11 @@ impl<'a> Checker<'a> {
             if let Some(header) = &self.document.header {
                 errors.extend(bullet::check(bullet_spec, header));
             }
+        }
+
+        // CheckParaNumBullet — mirrors Checker::CheckParaNumBullet.
+        if let Some(paranum_spec) = &self.spec.paranumbullet {
+            errors.extend(para_num_bullet::check(self.document, paranum_spec));
         }
 
         Ok(errors)
