@@ -7,6 +7,7 @@
 pub mod char_shape;
 pub mod hyperlink;
 pub mod macro_;
+pub mod outline_shape;
 pub mod para_shape;
 pub mod special_character;
 pub mod style;
@@ -136,6 +137,11 @@ impl<'a> Checker<'a> {
                     self.scope,
                 )?);
             }
+        }
+
+        // CheckOutlineShape — validate outline numbering shapes per level.
+        if let Some(outline_spec) = &self.spec.outlineshape {
+            errors.extend(outline_shape::check(self.document, outline_spec));
         }
 
         Ok(errors)

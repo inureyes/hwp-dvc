@@ -105,6 +105,18 @@ pub const CHARSHAPE_RATIO: u32 = 1007;
 /// Spacing value outside the allowed range (`JID_CHAR_SHAPE_SPACING = JID_CHAR_SHAPE + 8`).
 pub const CHARSHAPE_SPACING: u32 = 1008;
 
+/// Outline-shape error codes within the [`ErrorCode::OutlineShape`] (3200) range.
+///
+/// These mirror `JID_OUTLINESHAPE_*` constants from `references/dvc/Source/JsonModel.h`.
+pub mod outline_shape_codes {
+    /// `JID_OUTLINESHAPE_TYPE` (3201) — outline shape type mismatch.
+    pub const OUTLINESHAPE_TYPE: u32 = 3201;
+    /// `JID_OUTLINESHAPE_LEVELTYPE_NUMBERTYPE` (3206) — level numbertype template mismatch.
+    pub const OUTLINESHAPE_LEVEL_NUMBERTYPE: u32 = 3206;
+    /// `JID_OUTLINESHAPE_LEVELTYPE_NUMBERSHAPE` (3207) — level numbershape enum mismatch.
+    pub const OUTLINESHAPE_LEVEL_NUMBERSHAPE: u32 = 3207;
+}
+
 /// Individual paragraph-shape error codes (2000-range).
 ///
 /// These map to `JID_PARA_SHAPE_*` constants in the reference C++
