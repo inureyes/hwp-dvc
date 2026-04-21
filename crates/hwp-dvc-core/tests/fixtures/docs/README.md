@@ -99,15 +99,15 @@ Legend for **Status**: ✅ authored / ⏳ pending.
 | `parashape_fail_linespacing.hwpx` |  ✅    | ParaShape        | 2007 (linespacing)    |
 | `table_simple.hwpx`               |  ✅    | Table            | none                  |
 | `table_nested.hwpx`               |  ✅    | Table            | 3056 (table-in-table) |
-| `specialchar_pass.hwpx`           |  ⏳    | SpecialCharacter | none                  |
-| `specialchar_fail_ctrl.hwpx`      |  ⏳    | SpecialCharacter | 3101 (min-range)      |
+| `specialchar_pass.hwpx`           |  ✅    | SpecialCharacter | none                  |
+| `specialchar_fail_ctrl.hwpx`      |  ✅    | SpecialCharacter | 3101 (min-range)      |
 | `bullet_allowed.hwpx`             |  ⏳    | Bullet           | none                  |
 | `bullet_disallowed.hwpx`          |  ⏳    | Bullet           | 3304 (shapes)         |
 | `outline_multilevel.hwpx`         |  ⏳    | OutlineShape     | varies by level       |
 | `paranum_simple.hwpx`             |  ⏳    | ParaNumBullet    | varies by level       |
-| `style_default_only.hwpx`         |  ⏳    | Style            | none                  |
+| `style_default_only.hwpx`         |  ✅    | Style            | none                  |
 | `style_custom.hwpx`               |  ⏳    | Style            | 3502 (permission)     |
-| `hyperlink_none.hwpx`             |  ⏳    | Hyperlink        | none                  |
+| `hyperlink_none.hwpx`             |  ✅    | Hyperlink        | none                  |
 | `hyperlink_external.hwpx`         |  ✅    | Hyperlink        | 6901 (permission)     |
 | `macro_none.hwpx`                 |  ✅    | Macro            | none                  |
 | `macro_present.hwpx`              |  ✅    | Macro            | 7001 (permission)     |
@@ -195,19 +195,16 @@ a matter of typing the sample text into a blank document and saving.
 
 ### SpecialCharacter
 
-#### `specialchar_pass.hwpx`
-- Only Korean syllables + ASCII + common CJK punctuation (range
-  covered by spec `minimum: 32`, `maximum: 1048575`).
+#### `specialchar_pass.hwpx` ✅ (synthesized)
+- Repack of `parashape_pass.hwpx`; its baseline body text is entirely
+  within the allowed range (`minimum: 32`, `maximum: 1048575`).
 - Expected: no errors.
 
-#### `specialchar_fail_ctrl.hwpx`
-- Hard to author in the GUI. Recommended procedure:
-  1. Save a copy of `specialchar_pass.hwpx`.
-  2. `unzip -p copy.hwpx Contents/section0.xml > section0.xml`
-  3. Insert a `&#x7;` (or similar below-0x20) entity inside a `<hp:t>`
-     element in `section0.xml`.
-  4. Re-pack: `zip copy.hwpx Contents/section0.xml` (preserving the
-     archive's other parts untouched).
+#### `specialchar_fail_ctrl.hwpx` ✅ (synthesized)
+- Copy of `parashape_pass.hwpx` with a single `&#x7;` (BEL, U+0007)
+  entity prepended to the first `<hp:t>` element in
+  `Contents/section0.xml`. BEL is below the spec's `minimum=32` and
+  so must trigger a failure.
 - Expected: **1 error** in the 3100 range for minimum-range violation.
 
 ---
@@ -253,8 +250,9 @@ a matter of typing the sample text into a blank document and saving.
 
 ### Style
 
-#### `style_default_only.hwpx`
-- Use only the built-in `바탕글` paragraph style.
+#### `style_default_only.hwpx` ✅ (synthesized)
+- Repack of `parashape_pass.hwpx`; the baseline uses only the built-in
+  `바탕글` paragraph style.
 - Expected: no errors.
 
 #### `style_custom.hwpx`
@@ -267,8 +265,8 @@ a matter of typing the sample text into a blank document and saving.
 
 ### Hyperlink
 
-#### `hyperlink_none.hwpx`
-- Baseline only.
+#### `hyperlink_none.hwpx` ✅ (synthesized)
+- Repack of `parashape_pass.hwpx`; no hyperlink controls present.
 - Expected: no errors.
 
 #### `hyperlink_external.hwpx`
