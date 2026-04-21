@@ -39,8 +39,7 @@ fn fixture_spec_parses_and_matches_defaults() {
 /// tested here. See `NOTICE` in the same directory.
 #[test]
 fn hancom_full_catalog_is_readable() {
-    let raw = std::fs::read_to_string(fixture("hancom_full.json"))
-        .expect("catalog readable");
+    let raw = std::fs::read_to_string(fixture("hancom_full.json")).expect("catalog readable");
     assert!(raw.contains("\"charshape\""));
     assert!(raw.contains("\"parashape\""));
     assert!(raw.contains("\"table\""));

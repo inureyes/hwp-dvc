@@ -10,10 +10,7 @@ use crate::error::{DvcError, DvcResult};
 
 use super::common::{attr_string, attr_u32, local_name, skip};
 
-pub(super) fn parse<B: BufRead>(
-    reader: &mut Reader<B>,
-    out: &mut Vec<FontFace>,
-) -> DvcResult<()> {
+pub(super) fn parse<B: BufRead>(reader: &mut Reader<B>, out: &mut Vec<FontFace>) -> DvcResult<()> {
     let mut buf = Vec::new();
     loop {
         let ev = reader.read_event_into(&mut buf)?;

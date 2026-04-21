@@ -69,3 +69,8 @@ pub mod macro_codes {
     /// is `false` — the document violates the policy.
     pub const MACRO_PERMISSION: u32 = 7001;
 }
+
+/// Special-character sub-codes within the `SpecialCharacter` (3100) range.
+pub const SPECIALCHAR_MIN: u32 = 3101;
+/// Special-character sub-codes within the `SpecialCharacter` (3100) range.
+pub const SPECIALCHAR_MAX: u32 = 3102;
