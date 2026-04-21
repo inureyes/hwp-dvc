@@ -1,0 +1,43 @@
+# Reference materials (not part of the Rust port)
+references/
+
+# Rust / Cargo
+target/
+**/*.rs.bk
+*.pdb
+
+# Do NOT ignore Cargo.lock for binaries/workspaces. Keep it committed.
+# If any member crate is library-only, uncomment in its own .gitignore:
+# Cargo.lock
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Local build artifacts
+/tmp/
+/dist/
+*.log
+
+# Local env / secrets
+.env
+.env.local
+
+# Coverage / profiling
+*.profraw
+*.profdata
+tarpaulin-report.html
+cobertura.xml
+lcov.info
+
+# Fuzzing
+crates/*/fuzz/target/
+crates/*/fuzz/corpus/
+crates/*/fuzz/artifacts/
+
+# Claude Code local state (project-local)
+.claude/settings.local.json

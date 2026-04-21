@@ -1,0 +1,25 @@
+[package]
+name = "hwp-dvc-core"
+description = "Core library for HWPX Document Validation Checker (DVC)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+
+[lib]
+name = "hwp_dvc_core"
+path = "src/lib.rs"
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+zip.workspace = true
+quick-xml.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+anyhow.workspace = true
