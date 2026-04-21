@@ -4,6 +4,8 @@
 //! Maps to `Checker` in `references/dvc/Checker.h`. Each `Check*`
 //! method in the C++ version becomes an associated function here.
 
+pub mod style;
+
 use crate::document::Document;
 use crate::error::DvcResult;
 use crate::spec::DvcSpec;
@@ -73,6 +75,10 @@ impl<'a> Checker<'a> {
     /// `CheckParaNumBullet`, `CheckHyperlink`, `CheckStyle`,
     /// `CheckMacro` from `references/dvc/Checker.cpp`.
     pub fn run(&self) -> DvcResult<Vec<DvcErrorInfo>> {
-        Ok(Vec::new())
+        let mut errors: Vec<DvcErrorInfo> = Vec::new();
+        if let Some(style_spec) = &self.spec.style {
+            errors.extend(style::check(style_spec, &self.document.run_type_infos));
+        }
+        Ok(errors)
     }
 }
