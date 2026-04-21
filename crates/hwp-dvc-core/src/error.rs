@@ -90,3 +90,24 @@ pub const CHARSHAPE_RATIO: u32 = 1007;
 
 /// Spacing value outside the allowed range (`JID_CHAR_SHAPE_SPACING = JID_CHAR_SHAPE + 8`).
 pub const CHARSHAPE_SPACING: u32 = 1008;
+
+/// Individual paragraph-shape error codes (2000-range).
+///
+/// These map to `JID_PARA_SHAPE_*` constants in the reference C++
+/// implementation (`references/dvc/Source/JsonModel.h`).
+pub mod para_shape_codes {
+    /// JID_PARA_SHAPE_FIRSTLINE — first-line indent.
+    pub const PARASHAPE_FIRSTLINE: u32 = 2004;
+    /// JID_PARA_SHAPE_INDENT — paragraph indent.
+    pub const PARASHAPE_INDENT: u32 = 2005;
+    /// JID_PARA_SHAPE_OUTDENT — paragraph outdent (hanging indent).
+    pub const PARASHAPE_OUTDENT: u32 = 2006;
+    /// JID_PARA_SHAPE_LINESPACING — line-spacing type mismatch.
+    pub const PARASHAPE_LINESPACING: u32 = 2007;
+    /// JID_PARA_SHAPE_LINESPACINGVALUE — line-spacing value mismatch.
+    pub const PARASHAPE_LINESPACINGVALUE: u32 = 2008;
+    /// JID_PARA_SHAPE_SPACINGPARAUP — above-paragraph spacing.
+    pub const PARASHAPE_SPACINGPARAUP: u32 = 2009;
+    /// JID_PARA_SHAPE_SPACINGPARABOTTOM — below-paragraph spacing.
+    pub const PARASHAPE_SPACINGPARABOTTOM: u32 = 2010;
+}
