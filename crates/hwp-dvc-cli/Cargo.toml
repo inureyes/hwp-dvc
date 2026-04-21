@@ -13,6 +13,10 @@ readme.workspace = true
 name = "hwp-dvc"
 path = "src/main.rs"
 
+[features]
+## Enable the XML output formatter. Forwards to `hwp-dvc-core/xml`.
+xml = ["hwp-dvc-core/xml"]
+
 [dependencies]
 hwp-dvc-core = { path = "../hwp-dvc-core" }
 anyhow.workspace = true
