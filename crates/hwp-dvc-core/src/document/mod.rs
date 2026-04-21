@@ -15,10 +15,12 @@
 //! The reference C++ implementation delegates this to Hancom's OWPML
 //! model DLL. In Rust we parse the XML directly with `quick-xml`.
 //!
-//! The `header` submodule is live; body section parsing is tracked
-//! separately (issue #3).
+//! Submodules:
+//! - [`header`] — `Contents/header.xml` shape tables (issue #2).
+//! - [`section`] — `Contents/section*.xml` paragraph AST (issue #3).
 
 pub mod header;
+pub mod section;
 
 use std::io::Read;
 use std::path::Path;
@@ -26,6 +28,7 @@ use std::path::Path;
 use crate::error::{DvcError, DvcResult};
 
 pub use header::HeaderTables;
+pub use section::Section;
 
 /// A minimal HWPX archive handle.
 ///
@@ -80,6 +83,50 @@ impl HwpxArchive {
             .ok_or_else(|| DvcError::Document("missing Contents/header.xml".into()))?;
         header::parser::parse_header(&part.bytes)
     }
+
+    /// Parse every `Contents/sectionN.xml` part in ascending numeric
+    /// order and return one [`Section`] per part.
+    ///
+    /// Non-numeric suffixes (`Contents/sectionBad.xml`) are silently
+    /// skipped because no conforming HWPX writer produces them; a
+    /// present-but-unnumbered section would be an authoring error
+    /// unrelated to this parser.
+    ///
+    /// Returns an empty vector if the archive declares no section
+    /// parts; that is a documented HWPX edge case (a cover-only
+    /// archive) rather than an error.
+    pub fn read_sections(&self) -> DvcResult<Vec<Section>> {
+        // Collect (index, &Part) pairs, filter to `Contents/sectionN.xml`,
+        // sort by N, then parse in order.
+        let mut numbered: Vec<(u32, &Part)> = Vec::new();
+        for part in &self.parts {
+            if let Some(idx) = section_index(&part.name) {
+                numbered.push((idx, part));
+            }
+        }
+        numbered.sort_by_key(|(idx, _)| *idx);
+
+        let mut sections = Vec::with_capacity(numbered.len());
+        for (idx, part) in numbered {
+            let sec = section::parser::parse_section(idx, &part.bytes).map_err(|e| match e {
+                DvcError::Document(msg) => DvcError::Document(format!("{} in {}", msg, part.name)),
+                other => other,
+            })?;
+            sections.push(sec);
+        }
+        Ok(sections)
+    }
+}
+
+/// Extract the numeric suffix `N` from `Contents/sectionN.xml`.
+/// Returns `None` if the part name does not match that pattern.
+fn section_index(name: &str) -> Option<u32> {
+    let rest = name.strip_prefix("Contents/section")?;
+    let num = rest.strip_suffix(".xml")?;
+    if num.is_empty() {
+        return None;
+    }
+    num.parse::<u32>().ok()
 }
 
 /// Placeholder result of parsing the OWPML document — to be fleshed
