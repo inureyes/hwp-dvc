@@ -56,3 +56,9 @@ pub enum ErrorCode {
     Hyperlink = 6900,
     Macro = 7000,
 }
+
+/// Specific error codes within the [`ErrorCode::Hyperlink`] (6900) range.
+pub mod hyperlink_codes {
+    /// A run is flagged as a hyperlink but the spec forbids hyperlinks.
+    pub const HYPERLINK_PERMISSION: u32 = 6901;
+}
