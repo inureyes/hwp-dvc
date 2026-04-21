@@ -74,6 +74,17 @@ strings FIXTURE.hwpx | grep -iE "inureyes|lablup|jshin|<your-name>"
 
 If `strings` catches your name, re-save with option 4 above ticked.
 
+If you authored a fixture with "저장 시 개인 정보 제거" disabled, you
+can scrub the `Contents/content.hpf` metadata after the fact with:
+
+```bash
+python3 scripts/scrub_fixture_metadata.py crates/hwp-dvc-core/tests/fixtures/docs/*.hwpx
+```
+
+The script is idempotent and rewrites title, creator, lastsaveby,
+subject, description, keyword, and date fields. It does not touch
+document body content.
+
 ## Fixture index
 
 Legend for **Status**: ✅ authored / ⏳ pending.
@@ -81,12 +92,12 @@ Legend for **Status**: ✅ authored / ⏳ pending.
 | File                              | Status | Category         | Expect errors (codes) |
 |-----------------------------------|:------:|------------------|-----------------------|
 | `charshape_pass.hwpx`             |  ✅    | CharShape        | none                  |
-| `charshape_fail_font.hwpx`        |  ⏳    | CharShape        | 1004 (font)           |
-| `charshape_fail_ratio.hwpx`       |  ⏳    | CharShape        | 1007 (ratio)          |
-| `parashape_pass.hwpx`             |  ⏳    | ParaShape        | none                  |
-| `parashape_fail_indent.hwpx`      |  ⏳    | ParaShape        | 2005 (indent)         |
-| `parashape_fail_linespacing.hwpx` |  ⏳    | ParaShape        | 2007 (linespacing)    |
-| `table_simple.hwpx`               |  ⏳    | Table            | none                  |
+| `charshape_fail_font.hwpx`        |  ✅    | CharShape        | 1004 (font)           |
+| `charshape_fail_ratio.hwpx`       |  ✅    | CharShape        | 1007 (ratio)          |
+| `parashape_pass.hwpx`             |  ✅    | ParaShape        | none                  |
+| `parashape_fail_indent.hwpx`      |  ✅    | ParaShape        | 2005 (indent)         |
+| `parashape_fail_linespacing.hwpx` |  ✅    | ParaShape        | 2007 (linespacing)    |
+| `table_simple.hwpx`               |  ✅    | Table            | none                  |
 | `table_nested.hwpx`               |  ✅    | Table            | 3056 (table-in-table) |
 | `specialchar_pass.hwpx`           |  ⏳    | SpecialCharacter | none                  |
 | `specialchar_fail_ctrl.hwpx`      |  ⏳    | SpecialCharacter | 3101 (min-range)      |
@@ -97,7 +108,7 @@ Legend for **Status**: ✅ authored / ⏳ pending.
 | `style_default_only.hwpx`         |  ⏳    | Style            | none                  |
 | `style_custom.hwpx`               |  ⏳    | Style            | 3502 (permission)     |
 | `hyperlink_none.hwpx`             |  ⏳    | Hyperlink        | none                  |
-| `hyperlink_external.hwpx`         |  ⏳    | Hyperlink        | 6901 (permission)     |
+| `hyperlink_external.hwpx`         |  ✅    | Hyperlink        | 6901 (permission)     |
 | `macro_none.hwpx`                 |  ✅    | Macro            | none                  |
 | `macro_present.hwpx`              |  ✅    | Macro            | 7001 (permission)     |
 
