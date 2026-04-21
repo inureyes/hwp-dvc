@@ -4,6 +4,7 @@
 //! Maps to `Checker` in `references/dvc/Checker.h`. Each `Check*`
 //! method in the C++ version becomes an associated function here.
 
+pub mod char_shape;
 pub mod hyperlink;
 pub mod macro_;
 pub mod special_character;
@@ -78,9 +79,9 @@ impl<'a> Checker<'a> {
 
     /// Run every enabled check and return the collected errors.
     ///
-    /// TODO: port `CheckCharShape`, `CheckParaShape`, `CheckTable`,
-    /// `CheckOutlineShape`, `CheckBullet`, `CheckParaNumBullet`
-    /// from `references/dvc/Checker.cpp`.
+    /// TODO: port `CheckParaShape`, `CheckTable`, `CheckOutlineShape`,
+    /// `CheckBullet`, `CheckParaNumBullet` from
+    /// `references/dvc/Checker.cpp`.
     pub fn run(&self) -> DvcResult<Vec<DvcErrorInfo>> {
         let mut errors: Vec<DvcErrorInfo> = Vec::new();
 
@@ -104,6 +105,19 @@ impl<'a> Checker<'a> {
                 sc_spec,
                 &self.document.run_type_infos,
             ));
+        }
+
+        // CheckCharShape — mirrors Checker::CheckCharShape (Checker.cpp:87).
+        if let Some(header) = &self.document.header {
+            if let Some(charshape_spec) = &self.spec.charshape {
+                let mut char_errors = char_shape::check(
+                    charshape_spec,
+                    header,
+                    &self.document.run_type_infos,
+                    self.level,
+                );
+                errors.append(&mut char_errors);
+            }
         }
 
         Ok(errors)
