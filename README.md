@@ -1,14 +1,13 @@
 # hwp-dvc
 
 A Rust reimplementation of Hancom's **HWPX Document Validation Checker
-(DVC)** — a tool that checks whether an HWPX document conforms to a
+(DVC)**: a tool that checks whether an HWPX document conforms to a
 JSON-defined validation spec (allowed fonts, paragraph shapes, table
 borders, hyperlink/macro policy, and so on).
 
-The original Windows/C++ DVC from Hancom
-([`hancom-io/dvc`](https://github.com/hancom-io/dvc)) is included under
-`references/dvc/` for comparison. This project is a cross-platform,
-OWPML-DLL-free rewrite in Rust.
+This project is a cross-platform, OWPML-DLL-free Rust rewrite of the
+original Windows/C++ DVC from Hancom
+([`hancom-io/dvc`](https://github.com/hancom-io/dvc)).
 
 > Status: **early work in progress.** The workspace compiles and the
 > CLI surface is wired up, but the OWPML reader and individual
@@ -80,8 +79,10 @@ A minimal spec looks like:
 }
 ```
 
-(See `references/dvc/sample/test.json` for a longer example and
-`references/dvc/sample/jsonFullSpec.json` for every supported key.)
+(See [`sample/test.json`](https://github.com/hancom-io/dvc/blob/main/sample/test.json)
+for a longer example and
+[`sample/jsonFullSpec.json`](https://github.com/hancom-io/dvc/blob/main/sample/jsonFullSpec.json)
+for every supported key.)
 
 ## Output format
 
@@ -117,22 +118,24 @@ hwp-dvc/
 ├── crates/
 │   ├── hwp-dvc-core/   # library: spec parsing, HWPX reader, checker, output
 │   └── hwp-dvc-cli/    # `hwp-dvc` binary
-├── references/         # C++ reference (not built; gitignored)
 ├── Cargo.toml          # workspace root
 ├── CLAUDE.md           # contributor/agent guide
+├── LICENSE             # Apache License 2.0
 └── README.md
 ```
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See individual files
-for copyright notices. The reference implementation under
-`references/dvc/` is also Apache-2.0 licensed and © Hancom Inc.
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE)
+for the full text. Individual files carry their own copyright notices.
+The reference implementation at
+[`hancom-io/dvc`](https://github.com/hancom-io/dvc) is also Apache-2.0
+licensed and © Hancom Inc.
 
 ## Acknowledgements
 
-- [`hancom-io/dvc`](https://github.com/hancom-io/dvc) — the original
+- [`hancom-io/dvc`](https://github.com/hancom-io/dvc): the original
   DVC that this port mirrors.
-- [`hancom-io/hwpx-owpml-model`](https://github.com/hancom-io/hwpx-owpml-model) —
+- [`hancom-io/hwpx-owpml-model`](https://github.com/hancom-io/hwpx-owpml-model):
   the OWPML model used by the reference; we reimplement the parts we
   need directly in Rust.
