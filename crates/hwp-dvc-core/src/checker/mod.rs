@@ -5,6 +5,7 @@
 //! method in the C++ version becomes an associated function here.
 
 pub mod hyperlink;
+pub mod macro_;
 pub mod style;
 
 use crate::document::Document;
@@ -78,8 +79,7 @@ impl<'a> Checker<'a> {
     ///
     /// TODO: port `CheckCharShape`, `CheckParaShape`, `CheckTable`,
     /// `CheckSpacialCharacter`, `CheckOutlineShape`, `CheckBullet`,
-    /// `CheckParaNumBullet`, `CheckMacro` from
-    /// `references/dvc/Checker.cpp`.
+    /// `CheckParaNumBullet` from `references/dvc/Checker.cpp`.
     pub fn run(&self) -> DvcResult<Vec<DvcErrorInfo>> {
         let mut errors: Vec<DvcErrorInfo> = Vec::new();
 
@@ -90,6 +90,11 @@ impl<'a> Checker<'a> {
 
         if let Some(style_spec) = &self.spec.style {
             errors.extend(style::check(style_spec, &self.document.run_type_infos));
+        }
+
+        // CheckMacro — emit an error when macros are present but forbidden.
+        if let Some(macro_spec) = &self.spec.macro_ {
+            errors.extend(macro_::check(macro_spec, self.document));
         }
 
         Ok(errors)

@@ -31,7 +31,7 @@ pub struct DvcSpec {
     pub style: Option<StyleSpec>,
     #[serde(default)]
     pub hyperlink: Option<HyperlinkSpec>,
-    #[serde(default)]
+    #[serde(rename = "macro", default)]
     pub macro_: Option<MacroSpec>,
 }
 
