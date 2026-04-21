@@ -4,6 +4,7 @@
 //! Maps to `Checker` in `references/dvc/Checker.h`. Each `Check*`
 //! method in the C++ version becomes an associated function here.
 
+pub mod hyperlink;
 pub mod style;
 
 use crate::document::Document;
@@ -65,20 +66,32 @@ pub struct Checker<'a> {
 
 impl<'a> Checker<'a> {
     pub fn new(spec: &'a DvcSpec, document: &'a Document) -> Self {
-        Self { spec, document, level: CheckLevel::default(), scope: OutputScope::default() }
+        Self {
+            spec,
+            document,
+            level: CheckLevel::default(),
+            scope: OutputScope::default(),
+        }
     }
 
     /// Run every enabled check and return the collected errors.
     ///
     /// TODO: port `CheckCharShape`, `CheckParaShape`, `CheckTable`,
     /// `CheckSpacialCharacter`, `CheckOutlineShape`, `CheckBullet`,
-    /// `CheckParaNumBullet`, `CheckHyperlink`, `CheckStyle`,
-    /// `CheckMacro` from `references/dvc/Checker.cpp`.
+    /// `CheckParaNumBullet`, `CheckMacro` from
+    /// `references/dvc/Checker.cpp`.
     pub fn run(&self) -> DvcResult<Vec<DvcErrorInfo>> {
         let mut errors: Vec<DvcErrorInfo> = Vec::new();
+
+        // CheckHyperlink — report forbidden hyperlink runs.
+        if let Some(spec) = &self.spec.hyperlink {
+            errors.extend(hyperlink::check(spec, &self.document.run_type_infos));
+        }
+
         if let Some(style_spec) = &self.spec.style {
             errors.extend(style::check(style_spec, &self.document.run_type_infos));
         }
+
         Ok(errors)
     }
 }
