@@ -1,0 +1,26 @@
+DVC spec fixtures — attribution
+================================
+
+`hancom_test.json` and `hancom_full.json` are verbatim copies of
+
+    sample/test.json         (from hancom-io/dvc, committed as hancom_test.json)
+    sample/jsonFullSpec.json (from hancom-io/dvc, committed as hancom_full.json)
+
+sourced from https://github.com/hancom-io/dvc.
+
+Copyright 2022 Hancom Inc. All rights reserved.
+Licensed under the Apache License, Version 2.0. See the project LICENSE
+file for the full text of the license.
+
+These files are included under `tests/fixtures/specs/` as reference
+material. They are not redistributed with the compiled library.
+
+Roles:
+- `hancom_test.json`  — a runnable example spec used by integration
+                        tests. Strict JSON, parses into `DvcSpec`.
+- `hancom_full.json`  — a key catalog listing every field the
+                        reference tool understands. NOT strict JSON
+                        (missing inter-field commas, carries a
+                        `[Json schema]` header marker) and not meant
+                        to be loaded as a spec. Kept as a developer
+                        reference for extending `DvcSpec`.
