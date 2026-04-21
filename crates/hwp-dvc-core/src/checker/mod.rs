@@ -6,6 +6,7 @@
 
 pub mod hyperlink;
 pub mod macro_;
+pub mod special_character;
 pub mod style;
 
 use crate::document::Document;
@@ -78,8 +79,8 @@ impl<'a> Checker<'a> {
     /// Run every enabled check and return the collected errors.
     ///
     /// TODO: port `CheckCharShape`, `CheckParaShape`, `CheckTable`,
-    /// `CheckSpacialCharacter`, `CheckOutlineShape`, `CheckBullet`,
-    /// `CheckParaNumBullet` from `references/dvc/Checker.cpp`.
+    /// `CheckOutlineShape`, `CheckBullet`, `CheckParaNumBullet`
+    /// from `references/dvc/Checker.cpp`.
     pub fn run(&self) -> DvcResult<Vec<DvcErrorInfo>> {
         let mut errors: Vec<DvcErrorInfo> = Vec::new();
 
@@ -95,6 +96,14 @@ impl<'a> Checker<'a> {
         // CheckMacro — emit an error when macros are present but forbidden.
         if let Some(macro_spec) = &self.spec.macro_ {
             errors.extend(macro_::check(macro_spec, self.document));
+        }
+
+        // CheckSpecialCharacter — codepoint range check on run text.
+        if let Some(sc_spec) = &self.spec.specialcharacter {
+            errors.extend(special_character::check(
+                sc_spec,
+                &self.document.run_type_infos,
+            ));
         }
 
         Ok(errors)

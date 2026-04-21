@@ -11,9 +11,7 @@ use crate::document::header::types::{Bullet, Numbering, ParaHead, Style};
 use crate::document::header::HeaderTables;
 use crate::error::{DvcError, DvcResult};
 
-use super::common::{
-    attr_bool, attr_string, attr_u32, local_name, read_text_until_end, skip,
-};
+use super::common::{attr_bool, attr_string, attr_u32, local_name, read_text_until_end, skip};
 
 // ---------------------------------------------------------------------------
 // <hh:styles>
@@ -84,9 +82,7 @@ pub(super) fn parse_bullets<B: BufRead>(
             }
             Event::End(ref e) if local_name(e.name()) == b"bullets" => return Ok(()),
             Event::Start(ref e) => skip(reader, e)?,
-            Event::Eof => {
-                return Err(DvcError::Document("unexpected EOF inside <bullets>".into()))
-            }
+            Event::Eof => return Err(DvcError::Document("unexpected EOF inside <bullets>".into())),
             _ => {}
         }
         buf.clear();
