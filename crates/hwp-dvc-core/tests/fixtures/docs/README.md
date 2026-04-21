@@ -98,8 +98,8 @@ Legend for **Status**: ✅ authored / ⏳ pending.
 | `style_custom.hwpx`               |  ⏳    | Style            | 3502 (permission)     |
 | `hyperlink_none.hwpx`             |  ⏳    | Hyperlink        | none                  |
 | `hyperlink_external.hwpx`         |  ⏳    | Hyperlink        | 6901 (permission)     |
-| `macro_none.hwpx`                 |  ⏳    | Macro            | none                  |
-| `macro_present.hwpx`              |  ⏳    | Macro            | 7001 (permission)     |
+| `macro_none.hwpx`                 |  ✅    | Macro            | none                  |
+| `macro_present.hwpx`              |  ✅    | Macro            | 7001 (permission)     |
 
 > Error code numbers are illustrative until the validators in
 > `crates/hwp-dvc-core/src/checker/` define their exact constants.
@@ -269,20 +269,37 @@ a matter of typing the sample text into a blank document and saving.
 
 ### Macro
 
-#### `macro_none.hwpx`
-- Baseline only. Confirm with
-  `unzip -l file.hwpx` that no `Scripts/` or similar macro part
-  exists.
+Macro detection in the reference C++ (see
+`references/dvc/Source/OWPMLReader.cpp::haveMacroInDocument`) is a
+simple substring check: any `<opf:item>` in `Contents/content.hpf`
+whose `href` contains `.js` counts as a macro. The two fixtures below
+are therefore synthesized rather than authored in 한글 — this keeps
+them tiny, deterministic, and byte-stable across regenerations.
+
+#### `macro_none.hwpx` ✅ (synthesized)
+- Derived from `charshape_pass.hwpx` by repacking its contents into a
+  fresh archive (`mimetype` STORED first, everything else DEFLATED).
+- No changes to `content.hpf`. No `Scripts/` part.
 - Expected: no errors.
 
-#### `macro_present.hwpx`
-- `도구 → 매크로 → 새로 만들기` →
-  ```
-  Sub test
-  End Sub
-  ```
-  save, close, re-open document to ensure the macro persists.
-- Expected: **1 error** in the 7000 range.
+#### `macro_present.hwpx` ✅ (synthesized)
+- Derived from `charshape_pass.hwpx` with two edits:
+  1. A `Scripts/JScript.js` part is added with a three-line
+     JavaScript stub (content is irrelevant; only the `.js` href
+     matters to the detector).
+  2. `Contents/content.hpf`'s `<opf:manifest>` gets one extra item:
+     `<opf:item id="script" href="Scripts/JScript.js" media-type="application/javascript"/>`.
+- Expected: **1 error** in the 7000 range against `fixture_spec.json`
+  (`"macro": { "permission": false }`).
+
+Regeneration procedure (re-run if the `charshape_pass.hwpx` baseline
+changes):
+
+```python
+# See commit history for the full script. Rough outline:
+#   extract charshape_pass.hwpx → add Scripts/JScript.js → patch
+#   content.hpf manifest → repack with mimetype STORED first.
+```
 
 ---
 
