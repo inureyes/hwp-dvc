@@ -15,13 +15,17 @@
 //! The reference C++ implementation delegates this to Hancom's OWPML
 //! model DLL. In Rust we parse the XML directly with `quick-xml`.
 //!
-//! This module currently only opens the archive and lists contained
-//! parts; full OWPML parsing is tracked separately.
+//! The `header` submodule is live; body section parsing is tracked
+//! separately (issue #3).
+
+pub mod header;
 
 use std::io::Read;
 use std::path::Path;
 
 use crate::error::{DvcError, DvcResult};
+
+pub use header::HeaderTables;
 
 /// A minimal HWPX archive handle.
 ///
@@ -64,6 +68,18 @@ impl HwpxArchive {
     pub fn part(&self, name: &str) -> Option<&Part> {
         self.parts.iter().find(|p| p.name == name)
     }
+
+    /// Parse `Contents/header.xml` from this archive.
+    ///
+    /// Returns [`DvcError::Document`] if the archive has no
+    /// `Contents/header.xml` part, or [`DvcError::Xml`] if the part's
+    /// bytes fail to parse.
+    pub fn read_header(&self) -> DvcResult<HeaderTables> {
+        let part = self
+            .part("Contents/header.xml")
+            .ok_or_else(|| DvcError::Document("missing Contents/header.xml".into()))?;
+        header::parser::parse_header(&part.bytes)
+    }
 }
 
 /// Placeholder result of parsing the OWPML document — to be fleshed
@@ -96,7 +112,10 @@ pub struct RunTypeInfo {
 impl Document {
     pub fn open(path: impl AsRef<Path>) -> DvcResult<Self> {
         let archive = HwpxArchive::open(path)?;
-        Ok(Self { archive, run_type_infos: Vec::new() })
+        Ok(Self {
+            archive,
+            run_type_infos: Vec::new(),
+        })
     }
 
     /// Parse the OWPML body into `RunTypeInfo` entries.
