@@ -133,11 +133,17 @@ fn parse_sub_list<B: BufRead>(
     depth: u32,
 ) -> DvcResult<()> {
     let mut buf = Vec::new();
+    // `<hp:secPr>` never appears inside a table cell in a well-formed
+    // HWPX — it is section-scoped and sits in the first run of the
+    // first top-level paragraph. A per-cell throwaway sink keeps the
+    // `parse_paragraph` signature uniform while discarding any
+    // spurious match.
+    let mut discard_outline_ref: Option<u32> = None;
     loop {
         let ev = reader.read_event_into(&mut buf)?;
         match ev {
             Event::Start(ref e) if local_name(e.name()) == b"p" => {
-                let para = parse_paragraph(reader, e, depth)?;
+                let para = parse_paragraph(reader, e, depth, &mut discard_outline_ref)?;
                 out.push(para);
             }
             Event::Empty(ref e) if local_name(e.name()) == b"p" => {

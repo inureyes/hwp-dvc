@@ -39,6 +39,16 @@ pub struct Section {
     /// so that downstream code can re-emit the original file path in
     /// error messages.
     pub index: u32,
+    /// `outlineShapeIDRef` attribute of the `<hp:secPr>` that sits
+    /// inside the first `<hp:run>` of the first `<hp:p>`. This is a
+    /// section-wide value that Phase 1c (#4) copies onto every
+    /// `RunTypeInfo` in the section — mirroring the C++ reference's
+    /// `OWPMLReader::GetRunTypeInfos` which resolves it via
+    /// `FindObjectFromParents(pPType, ID_PARA_SectionDefinitionType)`.
+    /// Defaults to 0 if the section has no `<hp:secPr>` (which only
+    /// happens for malformed HWPX; well-formed writers always emit
+    /// it on the section's first run).
+    pub outline_shape_id_ref: u32,
     /// Paragraphs in document order.
     pub paragraphs: Vec<Paragraph>,
 }

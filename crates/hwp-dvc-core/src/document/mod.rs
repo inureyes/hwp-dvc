@@ -18,8 +18,10 @@
 //! Submodules:
 //! - [`header`] — `Contents/header.xml` shape tables (issue #2).
 //! - [`section`] — `Contents/section*.xml` paragraph AST (issue #3).
+//! - [`run_type`] — `Vec<RunTypeInfo>` builder (issue #4).
 
 pub mod header;
+pub mod run_type;
 pub mod section;
 
 use std::io::Read;
@@ -129,21 +131,57 @@ fn section_index(name: &str) -> Option<u32> {
     num.parse::<u32>().ok()
 }
 
-/// Placeholder result of parsing the OWPML document — to be fleshed
-/// out as validators start needing concrete shape data.
+/// The result of parsing an HWPX document end-to-end.
+///
+/// After [`Document::open`] the struct only holds the raw
+/// [`HwpxArchive`]; calling [`Document::parse`] fills in
+/// [`Self::header`], [`Self::sections`], and [`Self::run_type_infos`]
+/// in one pass. Validators never interact with the archive directly —
+/// they read from the three populated fields.
+///
+/// All three populated fields are `Option`-less because a successful
+/// parse guarantees each has a value; the initial "unparsed" state is
+/// reflected by an empty `sections` vector and `header == None`
+/// rather than any sentinel. `header` stays `Option<HeaderTables>` so
+/// that callers that deliberately skip parsing (e.g., listing parts
+/// for debugging) can distinguish "we haven't parsed yet" from "the
+/// parse produced an empty table" — both are legal states.
 #[derive(Debug, Default)]
 pub struct Document {
     pub archive: HwpxArchive,
+    /// Parsed header tables (`Contents/header.xml`), or `None` before
+    /// [`Document::parse`] is called. Validators can assume this is
+    /// `Some` once `parse` has returned `Ok`.
+    pub header: Option<HeaderTables>,
+    /// Parsed body sections (`Contents/section*.xml`), in ascending
+    /// `N` order. Empty before [`Document::parse`] is called.
+    pub sections: Vec<Section>,
+    /// The flattened `RunTypeInfo` stream, in document order, across
+    /// all sections. This is the unit of validation every Phase 2
+    /// validator consumes.
     pub run_type_infos: Vec<RunTypeInfo>,
 }
 
 /// Mirrors `RunTypeInfo` in `references/dvc/Source/OWPMLReader.h`.
+///
+/// # Out-of-scope fields
+///
+/// `page_no` / `line_no` stay `0` in this issue. Layout-engine-based
+/// page and line numbering is tracked separately as issue
+/// [#19](https://github.com/inureyes/hwp-dvc/issues/19) because it
+/// requires porting the reference's vertical-position walk through
+/// `<hp:linesegarray>` — work that is deferred behind Phases 2/3
+/// since no validator currently consumes pagination.
 #[derive(Debug, Default, Clone)]
 pub struct RunTypeInfo {
     pub char_pr_id_ref: u32,
     pub para_pr_id_ref: u32,
     pub text: String,
+    /// Always `0` in this crate version — see [`RunTypeInfo`] doc and
+    /// [`crate::document::run_type::PAGE_LINE_OUT_OF_SCOPE`].
     pub page_no: u32,
+    /// Always `0` in this crate version — see [`RunTypeInfo`] doc and
+    /// [`crate::document::run_type::PAGE_LINE_OUT_OF_SCOPE`].
     pub line_no: u32,
     pub is_in_table: bool,
     pub is_in_table_in_table: bool,
@@ -161,13 +199,28 @@ impl Document {
         let archive = HwpxArchive::open(path)?;
         Ok(Self {
             archive,
+            header: None,
+            sections: Vec::new(),
             run_type_infos: Vec::new(),
         })
     }
 
-    /// Parse the OWPML body into `RunTypeInfo` entries.
-    /// TODO: port from `OWPMLReader::GetRunTypeInfos`.
+    /// Parse the OWPML header + body into [`Self::header`],
+    /// [`Self::sections`] and [`Self::run_type_infos`].
+    ///
+    /// Idempotent: calling it a second time re-parses from the
+    /// archive bytes and replaces the previous state. `DvcError` is
+    /// returned if any sub-parse (header, section) fails; the
+    /// document state is left unchanged in that case.
     pub fn parse(&mut self) -> DvcResult<()> {
-        Err(DvcError::NotImplemented("Document::parse (OWPML reader)"))
+        let header = self.archive.read_header()?;
+        let sections = self.archive.read_sections()?;
+        let run_type_infos = run_type::build_run_type_infos(&header, &sections);
+
+        // Commit only after all sub-parses succeed.
+        self.header = Some(header);
+        self.sections = sections;
+        self.run_type_infos = run_type_infos;
+        Ok(())
     }
 }
