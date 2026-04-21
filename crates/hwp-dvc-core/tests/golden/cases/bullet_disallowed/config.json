@@ -1,0 +1,5 @@
+{
+  "fixture": "bullet_disallowed.hwpx",
+  "spec": "fixture_spec.json",
+  "description": "Fixture using bullet shapes not in the spec allow-list - expected to produce BULLET_SHAPES (3304) errors"
+}

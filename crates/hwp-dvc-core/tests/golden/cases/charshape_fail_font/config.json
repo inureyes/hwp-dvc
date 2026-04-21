@@ -1,0 +1,5 @@
+{
+  "fixture": "charshape_fail_font.hwpx",
+  "spec": "fixture_spec.json",
+  "description": "Fixture using a font not in the spec allow-list - expected to produce CHARSHAPE_FONT (1004) errors"
+}

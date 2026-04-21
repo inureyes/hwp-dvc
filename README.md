@@ -124,6 +124,28 @@ hwp-dvc/
 └── README.md
 ```
 
+## Testing
+
+Run the full workspace test suite:
+
+```bash
+cargo test --workspace
+```
+
+This includes a **golden-test harness** at
+`crates/hwp-dvc-core/tests/golden.rs` that loads a curated set of HWPX
+fixtures, runs the checker end-to-end, and diffs the serialized JSON
+output against committed `expected.json` snapshots. The snapshots are
+regenerated with:
+
+```bash
+UPDATE_GOLDEN=1 cargo test -p hwp-dvc-core --test golden
+```
+
+See [`crates/hwp-dvc-core/tests/golden/README.md`](crates/hwp-dvc-core/tests/golden/README.md)
+for fixture selection, regeneration procedure, and the rationale for
+the current Rust-snapshot (vs C++-cross-verified) mode.
+
 ## License
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE)

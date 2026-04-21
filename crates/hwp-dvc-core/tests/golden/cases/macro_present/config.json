@@ -1,0 +1,5 @@
+{
+  "fixture": "macro_present.hwpx",
+  "spec": "fixture_spec.json",
+  "description": "Fixture with a macro script present - expected to produce MACRO_PERMISSION (7001) error"
+}
