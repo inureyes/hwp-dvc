@@ -31,14 +31,26 @@ pub fn parse_section(index: u32, bytes: &[u8]) -> DvcResult<Section> {
 
     let mut section = Section {
         index,
+        outline_shape_id_ref: 0,
         paragraphs: Vec::new(),
     };
 
-    dispatch(&mut reader, &mut section)?;
+    // Collected by `parse_paragraph` -> `parse_run` when it encounters
+    // `<hp:secPr outlineShapeIDRef="..">`. The first occurrence in the
+    // section wins (always the first run of the first paragraph in a
+    // well-formed HWPX).
+    let mut sec_outline_shape_id_ref: Option<u32> = None;
+
+    dispatch(&mut reader, &mut section, &mut sec_outline_shape_id_ref)?;
+    section.outline_shape_id_ref = sec_outline_shape_id_ref.unwrap_or(0);
     Ok(section)
 }
 
-fn dispatch<B: BufRead>(reader: &mut Reader<B>, section: &mut Section) -> DvcResult<()> {
+fn dispatch<B: BufRead>(
+    reader: &mut Reader<B>,
+    section: &mut Section,
+    sec_outline_shape_id_ref: &mut Option<u32>,
+) -> DvcResult<()> {
     let mut buf = Vec::new();
     // nesting_depth = 0 at the section root — any `<hp:tbl>` produced
     // directly inside a top-level paragraph becomes a depth-0 table.
@@ -47,7 +59,7 @@ fn dispatch<B: BufRead>(reader: &mut Reader<B>, section: &mut Section) -> DvcRes
         let ev = reader.read_event_into(&mut buf)?;
         match ev {
             Event::Start(ref e) if local_name(e.name()) == b"p" => {
-                let para = parse_paragraph(reader, e, base_depth)?;
+                let para = parse_paragraph(reader, e, base_depth, sec_outline_shape_id_ref)?;
                 section.paragraphs.push(para);
             }
             Event::Empty(ref e) if local_name(e.name()) == b"p" => {

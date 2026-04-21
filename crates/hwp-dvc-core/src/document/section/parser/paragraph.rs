@@ -30,10 +30,16 @@ use super::table::parse_table;
 /// paragraph starts at depth 0; a cell paragraph inherits the enclosing
 /// table's depth + 1 so that nested tables seen inside it get the
 /// correct `nesting_depth` without a second pass.
+///
+/// `sec_outline_shape_id_ref` is a paragraph-shared sink for the
+/// `<hp:secPr outlineShapeIDRef="...">` value. The section dispatcher
+/// owns the sink; cell paragraphs pass a throwaway sink because
+/// `<hp:secPr>` never appears inside a table cell in practice.
 pub(super) fn parse_paragraph<B: BufRead>(
     reader: &mut Reader<B>,
     start: &BytesStart<'_>,
     depth: u32,
+    sec_outline_shape_id_ref: &mut Option<u32>,
 ) -> DvcResult<Paragraph> {
     let mut para = Paragraph {
         para_pr_id_ref: attr_u32(start.attributes(), b"paraPrIDRef")?,
@@ -54,7 +60,14 @@ pub(super) fn parse_paragraph<B: BufRead>(
         let ev = reader.read_event_into(&mut buf)?;
         match ev {
             Event::Start(ref e) if local_name(e.name()) == b"run" => {
-                parse_run(reader, e, &mut para, depth, &mut in_hyperlink)?;
+                parse_run(
+                    reader,
+                    e,
+                    &mut para,
+                    depth,
+                    &mut in_hyperlink,
+                    sec_outline_shape_id_ref,
+                )?;
             }
             Event::Empty(ref e) if local_name(e.name()) == b"run" => {
                 // Control-only empty run — no children means no text
@@ -80,12 +93,18 @@ pub(super) fn parse_paragraph<B: BufRead>(
 /// `in_hyperlink` is a rolling flag owned by the parent paragraph:
 /// `FieldBegin`/`FieldEnd` markers encountered inside the run toggle
 /// it, and the value at `</run>` time is what the run records.
+///
+/// `sec_outline_shape_id_ref` is set when the run contains a
+/// `<hp:secPr outlineShapeIDRef="...">` control element. Only the
+/// first `<hp:run>` of a section's first `<hp:p>` carries this per
+/// HWPX convention, but the walker captures whichever one appears.
 fn parse_run<B: BufRead>(
     reader: &mut Reader<B>,
     start: &BytesStart<'_>,
     para: &mut Paragraph,
     depth: u32,
     in_hyperlink: &mut bool,
+    sec_outline_shape_id_ref: &mut Option<u32>,
 ) -> DvcResult<()> {
     let char_pr_id_ref = attr_u32(start.attributes(), b"charPrIDRef")?;
     let mut text = String::new();
@@ -111,6 +130,30 @@ fn parse_run<B: BufRead>(
                     *in_hyperlink = false;
                     skip(reader, e)?;
                 }
+                b"secPr" => {
+                    // First occurrence wins: the reference consumer
+                    // walks up ancestors and finds the single
+                    // `<hp:secPr>` attached to the section's opening
+                    // run. Don't overwrite if a later malformed
+                    // document emits a second one.
+                    if sec_outline_shape_id_ref.is_none() {
+                        *sec_outline_shape_id_ref =
+                            Some(attr_u32(e.attributes(), b"outlineShapeIDRef")?);
+                    }
+                    skip(reader, e)?;
+                }
+                b"ctrl" => {
+                    // `<hp:ctrl>` is a transparent container for the
+                    // inline-control markers a run can carry (e.g.
+                    // `<hp:fieldBegin>`, `<hp:fieldEnd>`, `<hp:colPr>`,
+                    // `<hp:bookmark>`). Descend into it and apply the
+                    // same pattern matching that the run body uses so
+                    // that HYPERLINK field markers wrapped inside it
+                    // still toggle the hyperlink flag. Real HWPX
+                    // writers emit field markers wrapped in `<hp:ctrl>`
+                    // unconditionally.
+                    parse_ctrl(reader, in_hyperlink, sec_outline_shape_id_ref)?;
+                }
                 _ => skip(reader, e)?,
             },
             Event::Empty(ref e) => match local_name(e.name()) {
@@ -119,6 +162,10 @@ fn parse_run<B: BufRead>(
                 }
                 b"fieldEnd" if is_hyperlink_field(e)? => {
                     *in_hyperlink = false;
+                }
+                b"secPr" if sec_outline_shape_id_ref.is_none() => {
+                    *sec_outline_shape_id_ref =
+                        Some(attr_u32(e.attributes(), b"outlineShapeIDRef")?);
                 }
                 b"t" => {
                     // Empty text element — nothing to collect.
@@ -138,6 +185,57 @@ fn parse_run<B: BufRead>(
                 return Ok(());
             }
             Event::Eof => return Err(DvcError::Document("unexpected EOF inside <run>".into())),
+            _ => {}
+        }
+        buf.clear();
+    }
+}
+
+/// Descend into an `<hp:ctrl>` wrapper, honoring the field markers
+/// and `<hp:secPr>` that HWPX writers nest inside it. Everything else
+/// (bookmarks, tab stops, column properties, ...) is skipped.
+fn parse_ctrl<B: BufRead>(
+    reader: &mut Reader<B>,
+    in_hyperlink: &mut bool,
+    sec_outline_shape_id_ref: &mut Option<u32>,
+) -> DvcResult<()> {
+    let mut buf = Vec::new();
+    loop {
+        let ev = reader.read_event_into(&mut buf)?;
+        match ev {
+            Event::Start(ref e) => match local_name(e.name()) {
+                b"fieldBegin" if is_hyperlink_field(e)? => {
+                    *in_hyperlink = true;
+                    skip(reader, e)?;
+                }
+                b"fieldEnd" if is_hyperlink_field(e)? => {
+                    *in_hyperlink = false;
+                    skip(reader, e)?;
+                }
+                b"secPr" => {
+                    if sec_outline_shape_id_ref.is_none() {
+                        *sec_outline_shape_id_ref =
+                            Some(attr_u32(e.attributes(), b"outlineShapeIDRef")?);
+                    }
+                    skip(reader, e)?;
+                }
+                _ => skip(reader, e)?,
+            },
+            Event::Empty(ref e) => match local_name(e.name()) {
+                b"fieldBegin" if is_hyperlink_field(e)? => {
+                    *in_hyperlink = true;
+                }
+                b"fieldEnd" if is_hyperlink_field(e)? => {
+                    *in_hyperlink = false;
+                }
+                b"secPr" if sec_outline_shape_id_ref.is_none() => {
+                    *sec_outline_shape_id_ref =
+                        Some(attr_u32(e.attributes(), b"outlineShapeIDRef")?);
+                }
+                _ => {}
+            },
+            Event::End(ref e) if local_name(e.name()) == b"ctrl" => return Ok(()),
+            Event::Eof => return Err(DvcError::Document("unexpected EOF inside <ctrl>".into())),
             _ => {}
         }
         buf.clear();
