@@ -23,6 +23,14 @@ fn hancom_test_spec_parses() {
     assert!(spec.table.is_some());
 }
 
+#[test]
+fn fixture_spec_parses_and_matches_defaults() {
+    let spec = DvcSpec::from_json_file(fixture("fixture_spec.json"))
+        .expect("fixture_spec.json should parse");
+    let cs = spec.charshape.expect("fixture_spec has charshape");
+    assert!(cs.font.iter().any(|f| f == "함초롬바탕"));
+}
+
 /// `hancom_full.json` is NOT a runnable spec. It is a key catalog
 /// kept under `tests/fixtures/specs/` for developer reference when
 /// extending `DvcSpec` in Phase 2+. The reference file intentionally

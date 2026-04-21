@@ -16,8 +16,14 @@ These files are included under `tests/fixtures/specs/` as reference
 material. They are not redistributed with the compiled library.
 
 Roles:
-- `hancom_test.json`  — a runnable example spec used by integration
-                        tests. Strict JSON, parses into `DvcSpec`.
+- `fixture_spec.json` — the spec that fixtures under
+                        `tests/fixtures/docs/` are authored against.
+                        Tailored to HWP's default environment (base
+                        font = 함초롬바탕 rather than 바탕, etc.).
+                        Project-authored, Apache-2.0.
+- `hancom_test.json`  — verbatim copy of the reference sample spec.
+                        Strict JSON, parses into `DvcSpec`. Used to
+                        smoke-test compatibility with upstream shape.
 - `hancom_full.json`  — a key catalog listing every field the
                         reference tool understands. NOT strict JSON
                         (missing inter-field commas, carries a

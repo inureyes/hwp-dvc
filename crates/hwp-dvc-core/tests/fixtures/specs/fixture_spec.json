@@ -1,0 +1,47 @@
+{
+    "charshape" :
+    {
+        "langtype" : "대표",
+        "font" : ["함초롬바탕", "함초롬돋움"],
+        "ratio" : 100,
+        "spacing" : 0
+    },
+
+    "parashape" :
+    {
+        "spacing-paraup" : 0,
+        "spacing-parabottom" : 0,
+        "linespacing" : 0,
+        "linespacingvalue" : 160,
+        "indent" : 0,
+        "outdent" : 0
+    },
+
+    "table" :
+    {
+        "border" :
+        [
+            { "position" : 1, "bordertype" : 1, "size" : 0.12, "color" : 0 },
+            { "position" : 2, "bordertype" : 1, "size" : 0.12, "color" : 0 },
+            { "position" : 3, "bordertype" : 1, "size" : 0.12, "color" : 0 },
+            { "position" : 4, "bordertype" : 1, "size" : 0.12, "color" : 0 }
+        ],
+        "treatAsChar" : true,
+        "table-in-table" : false
+    },
+
+    "specialcharacter" :
+    {
+        "minimum" : 32,
+        "maximum" : 1048575
+    },
+
+    "bullet" :
+    {
+        "bulletshapes" : "□○-•*"
+    },
+
+    "style" : { "permission" : false },
+    "hyperlink" : { "permission" : false },
+    "macro" : { "permission" : false }
+}
