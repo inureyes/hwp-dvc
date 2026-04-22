@@ -707,9 +707,151 @@ pub struct LevelType {
     pub numbershape: u32,
 }
 
+/// The logical style types defined in the HWPX format.
+///
+/// These mirror the named styles that Hancom's reference C++ DVC
+/// surfaces via `CStyle::getStyleType()` in `references/dvc/Source/`.
+/// Each variant's Korean name is the canonical `name` attribute in
+/// `<hh:style>` as written by the Hancom HWP editor.
+///
+/// The 21 variants cover the full set recognised by the reference:
+/// 바탕글, 본문, 개요1–10, 쪽번호, 머리말, 꼬리말, 각주, 미주,
+/// 메모, 차례제목, 차례1–3, 캡션.
+///
+/// The variants are ordered to match `JID_STYLE_*` in `JsonModel.h`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum StyleType {
+    /// 바탕글 — default/normal body style (`StyleNormal`).
+    #[serde(rename = "바탕글")]
+    Normal,
+    /// 본문 — body text (`StyleBody`).
+    #[serde(rename = "본문")]
+    Body,
+    /// 개요 1 — outline level 1 (`StyleOutline1`).
+    #[serde(rename = "개요 1")]
+    Outline1,
+    /// 개요 2 — outline level 2 (`StyleOutline2`).
+    #[serde(rename = "개요 2")]
+    Outline2,
+    /// 개요 3 — outline level 3 (`StyleOutline3`).
+    #[serde(rename = "개요 3")]
+    Outline3,
+    /// 개요 4 — outline level 4 (`StyleOutline4`).
+    #[serde(rename = "개요 4")]
+    Outline4,
+    /// 개요 5 — outline level 5 (`StyleOutline5`).
+    #[serde(rename = "개요 5")]
+    Outline5,
+    /// 개요 6 — outline level 6 (`StyleOutline6`).
+    #[serde(rename = "개요 6")]
+    Outline6,
+    /// 개요 7 — outline level 7 (`StyleOutline7`).
+    #[serde(rename = "개요 7")]
+    Outline7,
+    /// 개요 8 — outline level 8 (`StyleOutline8`).
+    #[serde(rename = "개요 8")]
+    Outline8,
+    /// 개요 9 — outline level 9 (`StyleOutline9`).
+    #[serde(rename = "개요 9")]
+    Outline9,
+    /// 개요 10 — outline level 10 (`StyleOutline10`).
+    #[serde(rename = "개요 10")]
+    Outline10,
+    /// 쪽번호 — page number style (`StylePageNum`).
+    #[serde(rename = "쪽번호")]
+    PageNum,
+    /// 머리말 — header style (`StyleHeader`).
+    #[serde(rename = "머리말")]
+    Header,
+    /// 꼬리말 — footer style (`StyleFooter`).
+    #[serde(rename = "꼬리말")]
+    Footer,
+    /// 각주 — footnote style (`StyleFootnote`).
+    #[serde(rename = "각주")]
+    Footnote,
+    /// 미주 — endnote style (`StyleEndnote`).
+    #[serde(rename = "미주")]
+    Endnote,
+    /// 메모 — memo/comment style (`StyleMemo`).
+    #[serde(rename = "메모")]
+    Memo,
+    /// 차례 제목 — table-of-contents title style (`StyleTocTitle`).
+    #[serde(rename = "차례 제목")]
+    TocTitle,
+    /// 차례 1 — table-of-contents level 1 (`StyleToc1`).
+    #[serde(rename = "차례 1")]
+    Toc1,
+    /// 차례 2 — table-of-contents level 2 (`StyleToc2`).
+    #[serde(rename = "차례 2")]
+    Toc2,
+    /// 차례 3 — table-of-contents level 3 (`StyleToc3`).
+    #[serde(rename = "차례 3")]
+    Toc3,
+    /// 캡션 — caption style (`StyleCaption`).
+    #[serde(rename = "캡션")]
+    Caption,
+}
+
+impl StyleType {
+    /// Return the canonical Korean style name that matches the `name`
+    /// attribute of `<hh:style>` in `header.xml`.
+    ///
+    /// The mapping mirrors `CStyle::getStyleType()` in the reference C++
+    /// source (`references/dvc/Source/`).
+    #[must_use]
+    pub fn as_korean_name(&self) -> &'static str {
+        match self {
+            StyleType::Normal => "바탕글",
+            StyleType::Body => "본문",
+            StyleType::Outline1 => "개요 1",
+            StyleType::Outline2 => "개요 2",
+            StyleType::Outline3 => "개요 3",
+            StyleType::Outline4 => "개요 4",
+            StyleType::Outline5 => "개요 5",
+            StyleType::Outline6 => "개요 6",
+            StyleType::Outline7 => "개요 7",
+            StyleType::Outline8 => "개요 8",
+            StyleType::Outline9 => "개요 9",
+            StyleType::Outline10 => "개요 10",
+            StyleType::PageNum => "쪽번호",
+            StyleType::Header => "머리말",
+            StyleType::Footer => "꼬리말",
+            StyleType::Footnote => "각주",
+            StyleType::Endnote => "미주",
+            StyleType::Memo => "메모",
+            StyleType::TocTitle => "차례 제목",
+            StyleType::Toc1 => "차례 1",
+            StyleType::Toc2 => "차례 2",
+            StyleType::Toc3 => "차례 3",
+            StyleType::Caption => "캡션",
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct StyleSpec {
+    /// Catch-all gate: when `false`, every run that uses a non-default
+    /// style (any style other than 바탕글) emits error 3502
+    /// ([`crate::error::style_codes::STYLE_PERMISSION`]).
+    ///
+    /// When `true`, all custom styles are permitted — no 3502 errors
+    /// are emitted — unless `allowed_types` further restricts which
+    /// logical style types are valid.
     pub permission: bool,
+    /// Optional allow-list of logical style types (`JID_STYLE_TYPE`
+    /// / error 3501). When this list is **non-empty**, every run whose
+    /// paragraph style name does not match one of the allowed types
+    /// emits error 3501 ([`crate::error::style_codes::STYLE_TYPE`]).
+    ///
+    /// The check fires regardless of the `permission` flag — a document
+    /// may be allowed to use custom styles (`permission: true`) while
+    /// still being required to use only specific types
+    /// (`allowed_types: ["바탕글", "본문"]`).
+    ///
+    /// When this list is absent or empty, no 3501 errors are emitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allowed_types: Option<Vec<StyleType>>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -835,5 +977,62 @@ mod tests {
         assert_eq!(pnb.start_number, None);
         assert_eq!(pnb.value, None);
         assert!(pnb.leveltype.is_empty());
+    }
+
+    #[test]
+    fn style_spec_without_allowed_types_parses() {
+        let s = r#"{ "style": { "permission": false } }"#;
+        let spec = DvcSpec::from_json_str(s).unwrap();
+        let st = spec.style.unwrap();
+        assert!(!st.permission);
+        assert!(st.allowed_types.is_none());
+    }
+
+    #[test]
+    fn style_spec_with_allowed_types_parses() {
+        let s = r#"{ "style": { "permission": true, "allowed_types": ["바탕글", "본문"] } }"#;
+        let spec = DvcSpec::from_json_str(s).unwrap();
+        let st = spec.style.unwrap();
+        assert!(st.permission);
+        let types = st.allowed_types.unwrap();
+        assert_eq!(types.len(), 2);
+        assert!(types.contains(&StyleType::Normal));
+        assert!(types.contains(&StyleType::Body));
+    }
+
+    #[test]
+    fn style_type_as_korean_name_roundtrips() {
+        // Every StyleType must produce its own Korean name, and that
+        // name must round-trip through JSON deserialization.
+        let all: &[(&str, StyleType)] = &[
+            ("바탕글", StyleType::Normal),
+            ("본문", StyleType::Body),
+            ("개요 1", StyleType::Outline1),
+            ("개요 10", StyleType::Outline10),
+            ("쪽번호", StyleType::PageNum),
+            ("머리말", StyleType::Header),
+            ("꼬리말", StyleType::Footer),
+            ("각주", StyleType::Footnote),
+            ("미주", StyleType::Endnote),
+            ("메모", StyleType::Memo),
+            ("차례 제목", StyleType::TocTitle),
+            ("차례 1", StyleType::Toc1),
+            ("차례 3", StyleType::Toc3),
+            ("캡션", StyleType::Caption),
+        ];
+        for (name, variant) in all {
+            assert_eq!(variant.as_korean_name(), *name);
+            // Round-trip through JSON.
+            let json = serde_json::to_string(variant).unwrap();
+            let decoded: StyleType = serde_json::from_str(&json).unwrap();
+            assert_eq!(&decoded, variant);
+        }
+    }
+
+    #[test]
+    fn style_spec_all_21_types_parse() {
+        let json = r#"["바탕글","본문","개요 1","개요 2","개요 3","개요 4","개요 5","개요 6","개요 7","개요 8","개요 9","개요 10","쪽번호","머리말","꼬리말","각주","미주","메모","차례 제목","차례 1","차례 2","차례 3","캡션"]"#;
+        let types: Vec<StyleType> = serde_json::from_str(json).unwrap();
+        assert_eq!(types.len(), 23);
     }
 }

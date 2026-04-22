@@ -228,6 +228,12 @@ pub struct RunTypeInfo {
     pub outline_shape_id_ref: u32,
     pub is_hyperlink: bool,
     pub is_style: bool,
+    /// Korean name of the style applied to the paragraph containing this run.
+    /// Resolved from `paragraph.style_id_ref` via the header style table.
+    /// Empty string when the paragraph has no style or the style id is not
+    /// found in the header (the `is_style` flag still reflects whether the
+    /// style differs from 바탕글).
+    pub style_name: String,
 }
 
 impl Document {

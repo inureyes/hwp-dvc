@@ -172,3 +172,88 @@ fn style_permission_constant_in_range() {
         "STYLE_PERMISSION ({STYLE_PERMISSION}) must be < next category ({next})"
     );
 }
+
+// ---------------------------------------------------------------------------
+// Type allow-list: allowed_types (JID_STYLE_TYPE = 3501)
+// ---------------------------------------------------------------------------
+
+use hwp_dvc_core::checker::style::STYLE_TYPE;
+
+/// When the spec allows only 바탕글 and the document uses only 바탕글,
+/// no 3501 errors should be emitted.
+#[test]
+fn style_default_only_passes_when_normal_is_in_allowed_types() {
+    let spec_json = r#"{ "style": { "permission": true, "allowed_types": ["바탕글"] } }"#;
+    let spec = DvcSpec::from_json_str(spec_json).expect("spec parses");
+    let mut doc = Document::open(doc_fixture("style_default_only.hwpx")).expect("doc opens");
+    doc.parse().expect("doc parses");
+    let checker = Checker::new(&spec, &doc);
+    let errors = checker.run().expect("run succeeds");
+    let type_errors: Vec<_> = errors
+        .iter()
+        .filter(|e| e.error_code == STYLE_TYPE)
+        .collect();
+    assert!(
+        type_errors.is_empty(),
+        "style_default_only must produce no 3501 errors when 바탕글 is allowed; \
+         got {type_errors:?}"
+    );
+}
+
+/// When the spec allows only 본문 and the document uses 바탕글 (not 본문),
+/// every run should emit a 3501 error because 바탕글 is not in the list.
+#[test]
+fn style_default_only_fails_when_normal_not_in_allowed_types() {
+    let spec_json = r#"{ "style": { "permission": true, "allowed_types": ["본문"] } }"#;
+    let spec = DvcSpec::from_json_str(spec_json).expect("spec parses");
+    let mut doc = Document::open(doc_fixture("style_default_only.hwpx")).expect("doc opens");
+    doc.parse().expect("doc parses");
+    let checker = Checker::new(&spec, &doc);
+    let errors = checker.run().expect("run succeeds");
+    let type_errors: Vec<_> = errors
+        .iter()
+        .filter(|e| e.error_code == STYLE_TYPE)
+        .collect();
+    assert!(
+        !type_errors.is_empty(),
+        "style_default_only must produce ≥ 1 3501 error when only 본문 is allowed"
+    );
+    for e in &type_errors {
+        assert!(e.use_style, "use_style must be true on 3501 errors");
+    }
+}
+
+/// style_custom uses a custom (non-standard) style. When permission=false
+/// and allowed_types is absent, only 3502 errors should fire (not 3501).
+#[test]
+fn style_custom_produces_only_permission_errors_when_no_allowed_types() {
+    let errors = check("style_custom.hwpx", "fixture_spec.json");
+    let (style_errors, _) = partition_style_errors(&errors);
+    assert!(
+        !style_errors.is_empty(),
+        "style_custom must emit style errors under permission=false"
+    );
+    // All style errors must be 3502, not 3501.
+    for e in &style_errors {
+        assert_eq!(
+            e.error_code, STYLE_PERMISSION,
+            "without allowed_types, only STYLE_PERMISSION (3502) should fire; got {}",
+            e.error_code
+        );
+    }
+}
+
+/// Guard that `STYLE_TYPE` is within the Style error range.
+#[test]
+fn style_type_constant_in_range() {
+    let base = ErrorCode::Style as u32;
+    let next = ErrorCode::Page as u32;
+    assert!(
+        STYLE_TYPE >= base,
+        "STYLE_TYPE ({STYLE_TYPE}) must be >= Style base ({base})"
+    );
+    assert!(
+        STYLE_TYPE < next,
+        "STYLE_TYPE ({STYLE_TYPE}) must be < next category ({next})"
+    );
+}

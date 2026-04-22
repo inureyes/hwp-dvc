@@ -148,6 +148,7 @@ const STATIC_MESSAGES_KO: &[(u32, &str)] = &[
     (3406, "문단 번호 수준의 번호 형식이 허용되지 않습니다"),
     (3407, "문단 번호 수준의 번호 모양이 허용되지 않습니다"),
     // ── Style (3500-range) ────────────────────────────────────────────────
+    (3501, "스타일 유형이 허용되지 않습니다"),
     (3502, "스타일 사용이 허용되지 않습니다"),
     // ── Hyperlink (6900-range) ────────────────────────────────────────────
     (6901, "하이퍼링크 사용이 허용되지 않습니다"),
@@ -249,6 +250,7 @@ const STATIC_MESSAGES_EN: &[(u32, &str)] = &[
     (3401, "paragraph numbering type is not allowed"),
     (3406, "paragraph numbering level format is not allowed"),
     (3407, "paragraph numbering level shape is not allowed"),
+    (3501, "style type is not in the allowed list"),
     (3502, "use of custom styles is not allowed"),
     (6901, "use of hyperlinks is not allowed"),
     (7001, "macro script is present but macros are not permitted"),
@@ -464,7 +466,7 @@ mod tests {
             3201, 3202, 3203, 3204, 3205, 3206, 3207, // Bullet (3300-range)
             3302, 3303, 3304, // ParaNumBullet (3400-range)
             3401, 3406, 3407, // Style (3500-range)
-            3502, // Hyperlink (6900-range)
+            3501, 3502, // Hyperlink (6900-range)
             6901, // Macro (7000-range)
             7001,
         ];
@@ -488,5 +490,15 @@ mod tests {
                 "table-detail code {code} must mention 셀 (cell): {msg}"
             );
         }
+    }
+
+    #[test]
+    fn style_type_message_is_korean() {
+        let msg = error_string(3501, ErrorContext::default());
+        assert!(!msg.is_empty(), "3501 must have a message");
+        assert!(
+            msg.chars().any(|c| c > '\u{0080}'),
+            "3501 message must contain Korean characters: {msg}"
+        );
     }
 }
