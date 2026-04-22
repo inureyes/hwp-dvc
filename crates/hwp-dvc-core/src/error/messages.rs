@@ -114,8 +114,14 @@ const STATIC_MESSAGES_EN: &[(u32, &str)] = &[
     (3034, "table border line width is not allowed"),
     (3035, "table border color is not allowed"),
     (3056, "table inside table is not allowed"),
-    (3101, "text contains a special character below the allowed minimum"),
-    (3102, "text contains a special character above the allowed maximum"),
+    (
+        3101,
+        "text contains a special character below the allowed minimum",
+    ),
+    (
+        3102,
+        "text contains a special character above the allowed maximum",
+    ),
     (3201, "outline shape type is not allowed"),
     (3206, "outline level number format is not allowed"),
     (3207, "outline level number shape is not allowed"),
@@ -226,7 +232,10 @@ mod tests {
     #[test]
     fn charshape_font_without_name_contains_glyph_word() {
         let msg = error_string(1004, ctx());
-        assert!(msg.contains("글꼴"), "1004 without name must mention 글꼴: {msg}");
+        assert!(
+            msg.contains("글꼴"),
+            "1004 without name must mention 글꼴: {msg}"
+        );
     }
 
     #[test]
@@ -270,7 +279,10 @@ mod tests {
     #[test]
     fn bullet_shapes_without_char_contains_bullet_word() {
         let msg = error_string(3304, ctx());
-        assert!(msg.contains("글머리표"), "3304 without char must mention 글머리표: {msg}");
+        assert!(
+            msg.contains("글머리표"),
+            "3304 without char must mention 글머리표: {msg}"
+        );
     }
 
     #[test]
@@ -280,7 +292,10 @@ mod tests {
             ..Default::default()
         };
         let msg = error_string(3304, ctx);
-        assert!(msg.contains("□"), "3304 with char must include the char: {msg}");
+        assert!(
+            msg.contains("□"),
+            "3304 with char must include the char: {msg}"
+        );
         assert!(msg.contains("글머리표"), "must mention 글머리표: {msg}");
     }
 
@@ -308,7 +323,10 @@ mod tests {
     #[test]
     fn unknown_code_returns_empty_string() {
         let msg = error_string(9999, ctx());
-        assert!(msg.is_empty(), "unknown code must return empty string: {msg}");
+        assert!(
+            msg.is_empty(),
+            "unknown code must return empty string: {msg}"
+        );
     }
 
     #[test]

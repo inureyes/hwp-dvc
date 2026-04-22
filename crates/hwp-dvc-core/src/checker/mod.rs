@@ -80,7 +80,12 @@ impl OutputScope {
     /// emitted.
     #[inline]
     fn is_default(&self) -> bool {
-        !self.all && !self.table && !self.table_detail && !self.shape && !self.style && !self.hyperlink
+        !self.all
+            && !self.table
+            && !self.table_detail
+            && !self.shape
+            && !self.style
+            && !self.hyperlink
     }
 
     /// Returns `true` when this category should be included in the output.

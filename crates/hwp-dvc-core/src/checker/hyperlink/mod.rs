@@ -9,7 +9,7 @@
 
 use crate::checker::DvcErrorInfo;
 use crate::document::RunTypeInfo;
-use crate::error::{ErrorContext, ErrorCode};
+use crate::error::{ErrorCode, ErrorContext};
 use crate::spec::HyperlinkSpec;
 
 /// Error code for a forbidden hyperlink run.

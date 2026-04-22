@@ -135,8 +135,14 @@ fn xml_output_pretty_contains_same_elements() {
     let pretty = to_xml(&errors, true).expect("pretty to_xml failed");
 
     // Both must have the same root element.
-    assert!(compact.contains("<dvcErrors>"), "compact must have <dvcErrors>");
-    assert!(pretty.contains("<dvcErrors>"), "pretty must have <dvcErrors>");
+    assert!(
+        compact.contains("<dvcErrors>"),
+        "compact must have <dvcErrors>"
+    );
+    assert!(
+        pretty.contains("<dvcErrors>"),
+        "pretty must have <dvcErrors>"
+    );
 
     // Pretty output must be longer (indentation adds bytes).
     assert!(

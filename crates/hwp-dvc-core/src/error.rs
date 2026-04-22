@@ -152,18 +152,110 @@ pub mod para_num_bullet_codes {
 /// These map to `JID_PARA_SHAPE_*` constants in the reference C++
 /// implementation (`references/dvc/Source/JsonModel.h`).
 pub mod para_shape_codes {
-    /// JID_PARA_SHAPE_FIRSTLINE — first-line indent.
+    /// JID_PARA_SHAPE_HORIZONTAL (2001) — horizontal alignment mismatch.
+    pub const PARASHAPE_HORIZONTAL: u32 = 2001;
+    /// JID_PARA_SHAPE_MARGINLEFT (2002) — left margin mismatch.
+    pub const PARASHAPE_MARGINLEFT: u32 = 2002;
+    /// JID_PARA_SHAPE_MARGINRIGHT (2003) — right margin mismatch.
+    pub const PARASHAPE_MARGINRIGHT: u32 = 2003;
+    /// JID_PARA_SHAPE_FIRSTLINE (2004) — first-line indent.
     pub const PARASHAPE_FIRSTLINE: u32 = 2004;
-    /// JID_PARA_SHAPE_INDENT — paragraph indent.
+    /// JID_PARA_SHAPE_INDENT (2005) — paragraph indent.
     pub const PARASHAPE_INDENT: u32 = 2005;
-    /// JID_PARA_SHAPE_OUTDENT — paragraph outdent (hanging indent).
+    /// JID_PARA_SHAPE_OUTDENT (2006) — paragraph outdent (hanging indent).
     pub const PARASHAPE_OUTDENT: u32 = 2006;
-    /// JID_PARA_SHAPE_LINESPACING — line-spacing type mismatch.
+    /// JID_PARA_SHAPE_LINESPACING (2007) — line-spacing type mismatch.
     pub const PARASHAPE_LINESPACING: u32 = 2007;
-    /// JID_PARA_SHAPE_LINESPACINGVALUE — line-spacing value mismatch.
+    /// JID_PARA_SHAPE_LINESPACINGVALUE (2008) — line-spacing value mismatch.
     pub const PARASHAPE_LINESPACINGVALUE: u32 = 2008;
-    /// JID_PARA_SHAPE_SPACINGPARAUP — above-paragraph spacing.
+    /// JID_PARA_SHAPE_SPACINGPARAUP (2009) — above-paragraph spacing.
     pub const PARASHAPE_SPACINGPARAUP: u32 = 2009;
-    /// JID_PARA_SHAPE_SPACINGPARABOTTOM — below-paragraph spacing.
+    /// JID_PARA_SHAPE_SPACINGPARABOTTOM (2010) — below-paragraph spacing.
     pub const PARASHAPE_SPACINGPARABOTTOM: u32 = 2010;
+    /// JID_PARA_SHAPE_SPACINGGRIDPAPER (2011) — snap-to-grid mismatch.
+    pub const PARASHAPE_SPACINGGRIDPAPER: u32 = 2011;
+    /// JID_PARA_SHAPE_LINEBREAKKOREAN (2012) — Korean line-break mode mismatch.
+    pub const PARASHAPE_LINEBREAKKOREAN: u32 = 2012;
+    /// JID_PARA_SHAPE_LINEBREAKENGLISH (2013) — Latin word line-break mismatch.
+    pub const PARASHAPE_LINEBREAKENGLISH: u32 = 2013;
+    /// JID_PARA_SHAPE_LINEBREAKCONDENSE (2014) — line-break condense value mismatch.
+    pub const PARASHAPE_LINEBREAKCONDENSE: u32 = 2014;
+    /// JID_PARA_SHAPE_PARATYPE (2015) — paragraph heading type mismatch.
+    pub const PARASHAPE_PARATYPE: u32 = 2015;
+    /// JID_PARA_SHAPE_PARATYPEVALUE (2016) — paragraph heading id mismatch.
+    pub const PARASHAPE_PARATYPEVALUE: u32 = 2016;
+    /// JID_PARA_SHAPE_WIDOWORPHAN (2017) — widow/orphan control mismatch.
+    pub const PARASHAPE_WIDOWORPHAN: u32 = 2017;
+    /// JID_PARA_SHAPE_KEEPWITHNEXT (2018) — keep-with-next mismatch.
+    pub const PARASHAPE_KEEPWITHNEXT: u32 = 2018;
+    /// JID_PARA_SHAPE_KEEPLINESTOGETHER (2019) — keep-lines-together mismatch.
+    pub const PARASHAPE_KEEPLINESTOGETHER: u32 = 2019;
+    /// JID_PARA_SHAPE_PAGEBREAKBEFORE (2020) — page-break-before mismatch.
+    pub const PARASHAPE_PAGEBREAKBEFORE: u32 = 2020;
+    /// JID_PARA_SHAPE_FONTLINEHEIGHT (2021) — font-line-height flag mismatch.
+    pub const PARASHAPE_FONTLINEHEIGHT: u32 = 2021;
+    /// JID_PARA_SHAPE_LINEWRAP (2022) — line-wrap flag mismatch.
+    pub const PARASHAPE_LINEWRAP: u32 = 2022;
+    /// JID_PARA_SHAPE_AUTOSPACEEASIANENG (2023) — East Asian/English autospace mismatch.
+    pub const PARASHAPE_AUTOSPACEEASIANENG: u32 = 2023;
+    /// JID_PARA_SHAPE_AUTOSPACEEASIANNUM (2024) — East Asian/numeral autospace mismatch.
+    pub const PARASHAPE_AUTOSPACEEASIANNUM: u32 = 2024;
+    /// JID_PARA_SHAPE_VERTICALALIGN (2025) — vertical alignment mismatch.
+    pub const PARASHAPE_VERTICALALIGN: u32 = 2025;
+    /// JID_PARA_SHAPE_TABTYPES (2026) — tab array presence mismatch.
+    /// TODO: Full per-tab field validation (tabtype/tabshape/tabposition) requires
+    /// a TabDefinition table in HeaderTables which is not yet parsed.
+    pub const PARASHAPE_TABTYPES: u32 = 2026;
+    /// JID_PARA_SHAPE_TABTYPE (2027) — tab type mismatch.
+    /// TODO: deferred — requires tab definition parsing.
+    pub const PARASHAPE_TABTYPE: u32 = 2027;
+    /// JID_PARA_SHAPE_TABSHAPE (2028) — tab shape mismatch.
+    /// TODO: deferred — requires tab definition parsing.
+    pub const PARASHAPE_TABSHAPE: u32 = 2028;
+    /// JID_PARA_SHAPE_TABPOSITION (2029) — tab position mismatch.
+    /// TODO: deferred — requires tab definition parsing.
+    pub const PARASHAPE_TABPOSITION: u32 = 2029;
+    /// JID_PARA_SHAPE_AUTOTABINDENT (2030) — auto-tab-indent flag mismatch.
+    pub const PARASHAPE_AUTOTABINDENT: u32 = 2030;
+    /// JID_PARA_SHAPE_AUTOTABPARARIGHTEND (2031) — auto-tab-para-right-end flag mismatch.
+    pub const PARASHAPE_AUTOTABPARARIGHTEND: u32 = 2031;
+    /// JID_PARA_SHAPE_BASETABSPACE (2032) — base tab space mismatch.
+    pub const PARASHAPE_BASETABSPACE: u32 = 2032;
+    /// JID_PARA_SHAPE_BORDER (2033) — paragraph border presence mismatch.
+    /// TODO: Full border comparison requires resolving border_fill_id_ref to a
+    /// BorderFill record and comparing type/size/color per edge; deferred until
+    /// paragraph-level BorderFill lookup is wired up.
+    pub const PARASHAPE_BORDER: u32 = 2033;
+    /// JID_PARA_SHAPE_BORDERPOSITION (2034) — border position mismatch.
+    /// TODO: deferred — see PARASHAPE_BORDER.
+    pub const PARASHAPE_BORDERPOSITION: u32 = 2034;
+    /// JID_PARA_SHAPE_BORDERTYPE (2035) — border line type mismatch.
+    /// TODO: deferred — see PARASHAPE_BORDER.
+    pub const PARASHAPE_BORDERTYPE: u32 = 2035;
+    /// JID_PARA_SHAPE_BORDERSIZE (2036) — border size mismatch.
+    /// TODO: deferred — see PARASHAPE_BORDER.
+    pub const PARASHAPE_BORDERSIZE: u32 = 2036;
+    /// JID_PARA_SHAPE_BORDERCOLOR (2037) — border color mismatch.
+    /// TODO: deferred — see PARASHAPE_BORDER.
+    pub const PARASHAPE_BORDERCOLOR: u32 = 2037;
+    /// JID_PARA_SHAPE_BGCOLOR (2038) — background color mismatch.
+    /// TODO: deferred — background color/pattern fields are not yet decoded
+    /// from the paragraph BorderFill record.
+    pub const PARASHAPE_BGCOLOR: u32 = 2038;
+    /// JID_PARA_SHAPE_BGPATTONCOLOR (2039) — background pattern color mismatch.
+    /// TODO: deferred — see PARASHAPE_BGCOLOR.
+    pub const PARASHAPE_BGPATTONCOLOR: u32 = 2039;
+    /// JID_PARA_SHAPE_BGPATTONTYPE (2040) — background pattern type mismatch.
+    /// TODO: deferred — see PARASHAPE_BGCOLOR.
+    pub const PARASHAPE_BGPATTONTYPE: u32 = 2040;
+    /// JID_PARA_SHAPE_SPACINGLEFT (2041) — paragraph border left-spacing flag mismatch.
+    pub const PARASHAPE_SPACINGLEFT: u32 = 2041;
+    /// JID_PARA_SHAPE_SPACINGRIGHT (2042) — paragraph border right-spacing flag mismatch.
+    pub const PARASHAPE_SPACINGRIGHT: u32 = 2042;
+    /// JID_PARA_SHAPE_SPACINGTOP (2043) — paragraph border top-spacing flag mismatch.
+    pub const PARASHAPE_SPACINGTOP: u32 = 2043;
+    /// JID_PARA_SHAPE_SPACINGBOTTOM (2044) — paragraph border bottom-spacing flag mismatch.
+    pub const PARASHAPE_SPACINGBOTTOM: u32 = 2044;
+    /// JID_PARA_SHAPE_SPACINGIGNORE (2045) — ignore-margin flag mismatch.
+    pub const PARASHAPE_SPACINGIGNORE: u32 = 2045;
 }
