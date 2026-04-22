@@ -30,18 +30,83 @@ pub enum DvcError {
     NotImplemented(&'static str),
 }
 
-/// Individual table error codes (within the `Table = 3000` range).
-///
-/// These mirror the `JID_TABLE_*` constants in `references/dvc/Source/JsonModel.h`.
-/// - `TABLE_BORDER_TYPE`  (3033) — outer border line-type mismatch
-/// - `TABLE_BORDER_SIZE`  (3034) — outer border width mismatch
-/// - `TABLE_BORDER_COLOR` (3035) — outer border color mismatch
-/// - `TABLE_TREAT_AS_CHAR` (3004) — `treatAsChar` attribute mismatch
-/// - `TABLE_IN_TABLE`     (3056) — nested table where policy forbids it
-pub const TABLE_BORDER_TYPE: u32 = 3033;
-pub const TABLE_BORDER_SIZE: u32 = 3034;
-pub const TABLE_BORDER_COLOR: u32 = 3035;
+// ──────────────────────────────────────────────────────────────────────────────
+// Table-range error code constants (mirrors JsonModel.h JID_TABLE_*)
+// ──────────────────────────────────────────────────────────────────────────────
+//
+// The constants below cover the **standard-mode** table checks
+// (`--table`). Cell-level fills/gradients/pictures (JID_TABLE+37 … +55)
+// belong to the separate `--tabledetail` mode and are not defined here.
+
+/// JID_TABLE_SIZEWIDTH — table width outside the allowed range.
+pub const TABLE_SIZE_WIDTH: u32 = 3001;
+/// JID_TABLE_SIZEHEIGHT — table height outside the allowed range.
+pub const TABLE_SIZE_HEIGHT: u32 = 3002;
+/// JID_TABLE_SIZEFIXED — `protect`/fixed-size flag mismatch.
+pub const TABLE_SIZE_FIXED: u32 = 3003;
+/// JID_TABLE_TREATASCHAR — `treatAsChar` attribute mismatch.
 pub const TABLE_TREAT_AS_CHAR: u32 = 3004;
+/// JID_TABLE_POS — text-wrap / position type mismatch.
+pub const TABLE_POS: u32 = 3005;
+/// JID_TABLE_TEXTPOS — text-flow (around-table text position) mismatch.
+pub const TABLE_TEXT_POS: u32 = 3006;
+/// JID_TABLE_HTYPE — horizontal relative-to type mismatch.
+pub const TABLE_HTYPE: u32 = 3007;
+/// JID_TABLE_HDIRECTION — horizontal alignment direction mismatch.
+pub const TABLE_HDIRECTION: u32 = 3008;
+/// JID_TABLE_HVALUE — horizontal offset value outside allowed range.
+pub const TABLE_HVALUE: u32 = 3009;
+/// JID_TABLE_VTYPE — vertical relative-to type mismatch.
+pub const TABLE_VTYPE: u32 = 3010;
+/// JID_TABLE_VDIRECTION — vertical alignment direction mismatch.
+pub const TABLE_VDIRECTION: u32 = 3011;
+/// JID_TABLE_VVALUE — vertical offset value outside allowed range.
+pub const TABLE_VVALUE: u32 = 3012;
+/// JID_TABLE_SOFLOWWITHTEXT — flow-with-text flag mismatch.
+pub const TABLE_SOFLOW_WITH_TEXT: u32 = 3013;
+/// JID_TABLE_SOALLOWOVERLAP — allow-overlap flag mismatch.
+pub const TABLE_SOALLOW_OVERLAP: u32 = 3014;
+/// JID_TABLE_SOHOLDANCHOROBJ — hold-anchor-and-object flag mismatch.
+pub const TABLE_SOHOLD_ANCHOR_OBJ: u32 = 3015;
+/// JID_TABLE_PARALLEL — parallel (affect-line-spacing) flag mismatch.
+pub const TABLE_PARALLEL: u32 = 3016;
+/// JID_TABLE_ROTATION — rotation angle out of allowed range.
+pub const TABLE_ROTATION: u32 = 3017;
+/// JID_TABLE_GRADIENT_H — horizontal gradient offset out of range.
+pub const TABLE_GRADIENT_H: u32 = 3018;
+/// JID_TABLE_GRADIENT_V — vertical gradient offset out of range.
+pub const TABLE_GRADIENT_V: u32 = 3019;
+/// JID_TABLE_NUMVERTYPE — numbering type (TABLE/PICTURE/…) mismatch.
+pub const TABLE_NUM_VER_TYPE: u32 = 3020;
+/// JID_TABLE_OBJPROTECT — object-protection flag mismatch.
+pub const TABLE_OBJ_PROTECT: u32 = 3021;
+/// JID_TABLE_MARGIN_LEFT — outer left margin out of allowed range.
+pub const TABLE_MARGIN_LEFT: u32 = 3022;
+/// JID_TABLE_MARGIN_RIGHT — outer right margin out of allowed range.
+pub const TABLE_MARGIN_RIGHT: u32 = 3023;
+/// JID_TABLE_MARGIN_TOP — outer top margin out of allowed range.
+pub const TABLE_MARGIN_TOP: u32 = 3024;
+/// JID_TABLE_MARGIN_BOTTOM — outer bottom margin out of allowed range.
+pub const TABLE_MARGIN_BOTTOM: u32 = 3025;
+/// JID_TABLE_CAPTION_POSITION — caption position mismatch.
+pub const TABLE_CAPTION_POSITION: u32 = 3026;
+/// JID_TABLE_CAPTION_SIZE — caption size out of allowed range.
+pub const TABLE_CAPTION_SIZE: u32 = 3027;
+/// JID_TABLE_CAPTION_SPACING — caption spacing out of allowed range.
+pub const TABLE_CAPTION_SPACING: u32 = 3028;
+/// JID_TABLE_CAPTION_SOCAPFULLSIZE — caption full-size flag mismatch.
+pub const TABLE_CAPTION_SOCAP_FULL_SIZE: u32 = 3029;
+/// JID_TABLE_CAPTION_LINEWRAP — caption line-wrap flag mismatch.
+pub const TABLE_CAPTION_LINE_WRAP: u32 = 3030;
+/// JID_TABLE_BORDER_TYPE — outer border line-type mismatch.
+pub const TABLE_BORDER_TYPE: u32 = 3033;
+/// JID_TABLE_BORDER_SIZE — outer border width mismatch.
+pub const TABLE_BORDER_SIZE: u32 = 3034;
+/// JID_TABLE_BORDER_COLOR — outer border color mismatch.
+pub const TABLE_BORDER_COLOR: u32 = 3035;
+/// JID_TABLE_BORDER_CELLSPACING — between-cell spacing out of allowed range.
+pub const TABLE_BORDER_CELL_SPACING: u32 = 3036;
+/// JID_TABLE_TABLE_IN_TABLE — nested table where policy forbids it.
 pub const TABLE_IN_TABLE: u32 = 3056;
 
 /// Error code ranges mirror the reference C++ implementation

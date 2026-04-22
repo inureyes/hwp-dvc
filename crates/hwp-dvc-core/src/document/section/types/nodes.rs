@@ -122,6 +122,19 @@ pub struct Run {
 /// top-level tables have depth 0 and a table directly inside another
 /// table's cell has depth 1. Anything `>= 1` is a "table in table"
 /// for issue #4's purposes.
+///
+/// # Attributes for the standard-mode validator (issue #41)
+///
+/// Attributes collected below map 1:1 onto the standard-mode
+/// `JID_TABLE_*` error codes defined in
+/// `references/dvc/Source/JsonModel.h`. Each carrier field is named
+/// after the OWPML attribute it originates from, and the companion
+/// raw-string form (`*_raw`) is kept for enum-valued attributes so
+/// the validator does not have to repeat the
+/// `"TOP_AND_BOTTOM"`→`ASOTWT_TOP_AND_BOTTOM` translation table the
+/// reference keeps inside `OWPML::enumdef.h`. A missing or empty
+/// string means the writer did not emit the attribute (HWPX allows
+/// omission of defaults) and downstream checks treat it as unset.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Table {
     /// The `id` attribute of the `<hp:tbl>` element. Non-unique across
@@ -140,11 +153,92 @@ pub struct Table {
     pub row_cnt: u32,
     /// `colCnt` attribute.
     pub col_cnt: u32,
+    /// `cellSpacing` attribute — between-cell spacing in HWPUNITs
+    /// (`JID_TABLE_BORDER_CELLSPACING`).
+    pub cell_spacing: u32,
     /// Rows in document order.
     pub rows: Vec<Row>,
     /// 0 for a top-level table, 1 inside a cell of a top-level table,
     /// 2 inside a cell of a nested table, and so on.
     pub nesting_depth: u32,
+
+    // ── <hp:tbl> attributes (text-wrap / numbering) ────────────────────
+    /// `textWrap` attribute, raw string (`SQUARE`, `TOP_AND_BOTTOM`,
+    /// `BEHIND_TEXT`, `IN_FRONT_OF_TEXT`). Empty when absent.
+    pub text_wrap: String,
+    /// `textFlow` attribute, raw string (`BOTH_SIDES`, `LEFT_ONLY`,
+    /// `RIGHT_ONLY`, `LARGEST_ONLY`). Empty when absent.
+    pub text_flow: String,
+    /// `numberingType` attribute, raw string (`TABLE`, `PICTURE`,
+    /// `EQUATION`). Empty when absent.
+    pub numbering_type: String,
+    /// `lock` attribute — 0 = unlocked, 1 = locked.
+    pub lock: u32,
+    /// `noAdjust` attribute — the `objectProtect` flag in DVC terms.
+    pub no_adjust: u32,
+
+    // ── <hp:sz> attributes ────────────────────────────────────────────
+    /// `width` attribute of `<hp:sz>` in HWPUNITs.
+    pub width: u32,
+    /// `height` attribute of `<hp:sz>` in HWPUNITs.
+    pub height: u32,
+    /// `protect` attribute of `<hp:sz>` — `true` when size is fixed.
+    pub size_protect: bool,
+
+    // ── <hp:pos> attributes ───────────────────────────────────────────
+    /// `treatAsChar` attribute of `<hp:pos>` — `true` when the table
+    /// is treated as a single character in the text flow.
+    pub treat_as_char: bool,
+    /// `flowWithText` attribute of `<hp:pos>`.
+    pub flow_with_text: bool,
+    /// `allowOverlap` attribute of `<hp:pos>`.
+    pub allow_overlap: bool,
+    /// `holdAnchorAndSO` attribute of `<hp:pos>`.
+    pub hold_anchor_and_so: bool,
+    /// `affectLSpacing` attribute of `<hp:pos>` — the `parallel`
+    /// flag in DVC terms.
+    pub affect_l_spacing: bool,
+    /// `horzRelTo` attribute, raw string (`PAPER`/`PAGE`/`COLUMN`/`PARA`).
+    pub horz_rel_to: String,
+    /// `vertRelTo` attribute, raw string (`PAPER`/`PAGE`/`PARA`).
+    pub vert_rel_to: String,
+    /// `horzAlign` attribute, raw string (`LEFT`/`CENTER`/`RIGHT`/`INSIDE`/`OUTSIDE`).
+    pub horz_align: String,
+    /// `vertAlign` attribute, raw string (`TOP`/`CENTER`/`BOTTOM`/`INSIDE`/`OUTSIDE`).
+    pub vert_align: String,
+    /// `horzOffset` attribute — signed offset in HWPUNITs.
+    pub horz_offset: i32,
+    /// `vertOffset` attribute — signed offset in HWPUNITs.
+    pub vert_offset: i32,
+
+    // ── <hp:outMargin> attributes ─────────────────────────────────────
+    /// Outer left margin in HWPUNITs.
+    pub out_margin_left: u32,
+    /// Outer right margin in HWPUNITs.
+    pub out_margin_right: u32,
+    /// Outer top margin in HWPUNITs.
+    pub out_margin_top: u32,
+    /// Outer bottom margin in HWPUNITs.
+    pub out_margin_bottom: u32,
+
+    // ── Caption attributes (from an adjacent `<hp:caption>` element) ─
+    /// `true` if the table carries a `<hp:caption>` sibling.
+    ///
+    /// Caption attributes below are only meaningful when this flag
+    /// is `true`. When absent, the validator skips caption checks.
+    pub has_caption: bool,
+    /// Caption side, raw string (`LEFT`/`RIGHT`/`TOP`/`BOTTOM`).
+    pub caption_side: String,
+    /// Caption `sz` (width) in HWPUNITs.
+    pub caption_size: u32,
+    /// Caption `gap` (spacing from the table) in HWPUNITs.
+    pub caption_spacing: i32,
+    /// Caption `fullSz` attribute — `true` when caption spans the
+    /// full containing width.
+    pub caption_full_size: bool,
+    /// Caption line-wrap attribute — typically emitted on the
+    /// caption's inner paragraph definition.
+    pub caption_line_wrap: bool,
 }
 
 /// A single `<hp:tr>` row inside a [`Table`].

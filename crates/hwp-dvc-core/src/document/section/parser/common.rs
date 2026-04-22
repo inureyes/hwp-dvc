@@ -47,3 +47,45 @@ pub(super) fn attr_u32(attrs: Attributes<'_>, key: &[u8]) -> DvcResult<u32> {
 pub(super) fn attr_string(attrs: Attributes<'_>, key: &[u8]) -> DvcResult<String> {
     Ok(attr_str(attrs, key)?.unwrap_or_default())
 }
+
+/// Parse a signed-integer attribute. Returns `0` when absent.
+pub(super) fn attr_i32(attrs: Attributes<'_>, key: &[u8]) -> DvcResult<i32> {
+    match attr_str(attrs, key)? {
+        Some(s) => s.trim().parse::<i32>().map_err(|e| {
+            DvcError::Document(format!(
+                "expected i32 for attribute '{}', got '{}': {e}",
+                String::from_utf8_lossy(key),
+                s
+            ))
+        }),
+        None => Ok(0),
+    }
+}
+
+/// Parse a `"0"`/`"1"` boolean attribute the way OWPML writers emit it.
+///
+/// Treats `"1"` and `"true"` (case-insensitive) as `true`, `"0"` /
+/// `"false"` / absent as `false`. Any other literal is rejected with a
+/// [`DvcError::Document`] so malformed OWPML surfaces loudly.
+pub(super) fn attr_bool01(attrs: Attributes<'_>, key: &[u8]) -> DvcResult<bool> {
+    match attr_str(attrs, key)? {
+        None => Ok(false),
+        Some(s) => {
+            let trimmed = s.trim();
+            if trimmed.eq_ignore_ascii_case("1") || trimmed.eq_ignore_ascii_case("true") {
+                Ok(true)
+            } else if trimmed.eq_ignore_ascii_case("0")
+                || trimmed.eq_ignore_ascii_case("false")
+                || trimmed.is_empty()
+            {
+                Ok(false)
+            } else {
+                Err(DvcError::Document(format!(
+                    "expected 0/1 for attribute '{}', got '{}'",
+                    String::from_utf8_lossy(key),
+                    trimmed
+                )))
+            }
+        }
+    }
+}
