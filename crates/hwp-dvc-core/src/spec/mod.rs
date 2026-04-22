@@ -637,6 +637,28 @@ pub struct SpecialCharacterSpec {
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct OutlineShapeSpec {
+    /// Expected start number for the top-level `<hh:numbering start="…"/>` element.
+    ///
+    /// When `Some`, validated against [`Numbering::start`]; a mismatch fires
+    /// `OUTLINESHAPE_STARTNUMBER` (3202).
+    #[serde(rename = "startNumber", default)]
+    pub start_number: Option<u32>,
+
+    /// Expected per-level start value (`<hh:paraHead start="…"/>`).
+    ///
+    /// When `Some`, every level entry in `leveltype` is validated against
+    /// [`ParaHead::start`]; a mismatch fires `OUTLINESHAPE_VALUE` (3203).
+    #[serde(default)]
+    pub value: Option<u32>,
+
+    /// Required level entries.  When non-empty:
+    ///
+    /// - The document numbering must declare exactly the same set of levels
+    ///   (any mismatch fires `OUTLINESHAPE_LEVELTYPE` / 3204).
+    /// - Within each level, the `level` index is validated first
+    ///   (`OUTLINESHAPE_LEVELTYPE_LEVEL` / 3205), then `numbertype`
+    ///   (`OUTLINESHAPE_LEVEL_NUMBERTYPE` / 3206) and `numbershape`
+    ///   (`OUTLINESHAPE_LEVEL_NUMBERSHAPE` / 3207).
     #[serde(default)]
     pub leveltype: Vec<LevelType>,
 }

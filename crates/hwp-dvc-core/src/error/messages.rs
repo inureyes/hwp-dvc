@@ -133,6 +133,10 @@ const STATIC_MESSAGES_KO: &[(u32, &str)] = &[
     (3102, "허용 범위보다 높은 특수 문자가 포함되어 있습니다"),
     // ── OutlineShape (3200-range) ─────────────────────────────────────────
     (3201, "개요 모양 유형이 허용되지 않습니다"),
+    (3202, "개요 시작 번호가 허용되지 않습니다"),
+    (3203, "개요 수준의 시작 값이 허용되지 않습니다"),
+    (3204, "개요 수준 유형 구성이 허용되지 않습니다"),
+    (3205, "개요 수준 유형의 수준 번호가 올바르지 않습니다"),
     (3206, "개요 수준의 번호 형식이 허용되지 않습니다"),
     (3207, "개요 수준의 번호 모양이 허용되지 않습니다"),
     // ── Bullet (3300-range) ───────────────────────────────────────────────
@@ -233,6 +237,10 @@ const STATIC_MESSAGES_EN: &[(u32, &str)] = &[
         "text contains a special character above the allowed maximum",
     ),
     (3201, "outline shape type is not allowed"),
+    (3202, "outline shape start number is not allowed"),
+    (3203, "outline level start value is not allowed"),
+    (3204, "outline level type configuration is not allowed"),
+    (3205, "outline level type level index is incorrect"),
     (3206, "outline level number format is not allowed"),
     (3207, "outline level number shape is not allowed"),
     (3302, "bullet check type is not allowed"),
@@ -452,8 +460,8 @@ mod tests {
             // Table cell-detail (3037-3055) — --tabledetail only
             3037, 3038, 3039, 3040, 3041, 3042, 3043, 3044, 3045, 3046, 3047, 3048, 3049, 3050,
             3051, 3052, 3053, 3054, 3055, 3056, // SpecialCharacter (3100-range)
-            3101, 3102, // OutlineShape (3200-range)
-            3201, 3206, 3207, // Bullet (3300-range)
+            3101, 3102, // OutlineShape (3200-range) — full 3201–3207 now documented
+            3201, 3202, 3203, 3204, 3205, 3206, 3207, // Bullet (3300-range)
             3302, 3303, 3304, // ParaNumBullet (3400-range)
             3401, 3406, 3407, // Style (3500-range)
             3502, // Hyperlink (6900-range)
