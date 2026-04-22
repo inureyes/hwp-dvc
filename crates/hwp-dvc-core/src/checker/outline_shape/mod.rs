@@ -64,16 +64,14 @@
 
 use std::collections::HashSet;
 
+use crate::checker::numbering as num_walker;
 use crate::checker::DvcErrorInfo;
 use crate::document::header::types::enums::HeadingType;
 use crate::document::header::Numbering;
 use crate::document::{Document, RunTypeInfo};
-use crate::error::{
-    outline_shape_codes::{
-        OUTLINESHAPE_LEVELTYPE, OUTLINESHAPE_LEVELTYPE_LEVEL, OUTLINESHAPE_LEVEL_NUMBERSHAPE,
-        OUTLINESHAPE_LEVEL_NUMBERTYPE, OUTLINESHAPE_STARTNUMBER, OUTLINESHAPE_VALUE,
-    },
-    ErrorContext,
+use crate::error::outline_shape_codes::{
+    OUTLINESHAPE_LEVELTYPE, OUTLINESHAPE_LEVELTYPE_LEVEL, OUTLINESHAPE_LEVEL_NUMBERSHAPE,
+    OUTLINESHAPE_LEVEL_NUMBERTYPE, OUTLINESHAPE_STARTNUMBER, OUTLINESHAPE_VALUE,
 };
 use crate::spec::OutlineShapeSpec;
 
@@ -164,7 +162,7 @@ pub fn check(document: &Document, spec: &OutlineShapeSpec) -> Vec<DvcErrorInfo> 
         // Fires OUTLINESHAPE_VALUE (3203).
         if let Some(expected_value) = spec.value {
             if para_head.start != expected_value {
-                errors.push(make_error(run, OUTLINESHAPE_VALUE));
+                errors.push(num_walker::make_error(run, OUTLINESHAPE_VALUE));
             }
         }
 
@@ -172,14 +170,16 @@ pub fn check(document: &Document, spec: &OutlineShapeSpec) -> Vec<DvcErrorInfo> 
         // Only checked when the spec supplies a `numbertype` value.
         if let Some(expected_type) = &spec_entry.numbertype {
             if &para_head.num_format_text != expected_type {
-                errors.push(make_error(run, OUTLINESHAPE_LEVEL_NUMBERTYPE));
+                errors.push(num_walker::make_error(run, OUTLINESHAPE_LEVEL_NUMBERTYPE));
             }
         }
 
         // --- numbershape (enum ordinal → num_format string) ---
-        let expected_shape_str = num_shape_ordinal_to_str(spec_entry.numbershape);
+        // Unknown ordinals return `None` from `num_shape_to_str`; treat as a
+        // definite mismatch (conservative) by mapping `None` to `""`.
+        let expected_shape_str = num_walker::num_shape_to_str(spec_entry.numbershape).unwrap_or("");
         if para_head.num_format != expected_shape_str {
-            errors.push(make_error(run, OUTLINESHAPE_LEVEL_NUMBERSHAPE));
+            errors.push(num_walker::make_error(run, OUTLINESHAPE_LEVEL_NUMBERSHAPE));
         }
     }
 
@@ -194,8 +194,8 @@ pub fn check(document: &Document, spec: &OutlineShapeSpec) -> Vec<DvcErrorInfo> 
 /// per unique numbering template (not per run).
 ///
 /// - `start_number`: `Numbering::start` vs `spec.start_number` → `OUTLINESHAPE_STARTNUMBER` (3202)
-/// - `leveltype` count: `spec.leveltype.len()` vs `numbering.para_heads.len()` → `OUTLINESHAPE_LEVELTYPE` (3204)
-/// - level index: each `spec.leveltype[i].level` vs sequential expected `i+1` → `OUTLINESHAPE_LEVELTYPE_LEVEL` (3205)
+/// - `leveltype` count + level-index: delegated to [`num_walker::check_level_sequence`]
+///   using codes `OUTLINESHAPE_LEVELTYPE` (3204) and `OUTLINESHAPE_LEVELTYPE_LEVEL` (3205).
 fn check_numbering_top_level(
     run: &RunTypeInfo,
     numbering: &Numbering,
@@ -207,111 +207,30 @@ fn check_numbering_top_level(
     // the spec's expected start number.
     if let Some(expected_start) = spec.start_number {
         if numbering.start != expected_start {
-            errors.push(make_error(run, OUTLINESHAPE_STARTNUMBER));
+            errors.push(num_walker::make_error(run, OUTLINESHAPE_STARTNUMBER));
         }
     }
 
-    // --- leveltype wrapper (3204) ---
-    // When the spec defines leveltype entries, the document's numbering
-    // template must declare the same number of levels (para_heads).
-    // A count mismatch means the document is missing required levels or
-    // has surplus levels.
-    if !spec.leveltype.is_empty() && spec.leveltype.len() != numbering.para_heads.len() {
-        errors.push(make_error(run, OUTLINESHAPE_LEVELTYPE));
-    }
-
-    // --- leveltype level index (3205) ---
-    // Each spec `leveltype` entry carries a `level` field that must be a
-    // 1-indexed sequential integer matching its position in the array.
-    // Spec entry at index 0 → expected level 1, index 1 → level 2, etc.
-    // A mismatch means the spec (or the document it encodes) has a
-    // non-sequential level declaration.
-    for (idx, lt) in spec.leveltype.iter().enumerate() {
-        let expected_level = (idx as u32) + 1;
-        if lt.level != expected_level {
-            errors.push(make_error(run, OUTLINESHAPE_LEVELTYPE_LEVEL));
-            // One error per numbering template is sufficient; break after
-            // the first out-of-sequence entry to avoid flooding.
-            break;
-        }
-    }
+    // --- leveltype count (3204) + level-index (3205) ---
+    // Delegated to the shared level-sequence walker. Both the count check and
+    // the index-sequential check are structurally identical to the para-num
+    // variant; only the error codes differ.
+    num_walker::check_level_sequence(
+        run,
+        numbering,
+        &spec.leveltype,
+        OUTLINESHAPE_LEVELTYPE,
+        OUTLINESHAPE_LEVELTYPE_LEVEL,
+        errors,
+    );
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/// Map a `numbershape` ordinal (from the DVC JSON spec) to the OWPML
-/// `numFormat` string stored in [`ParaHead::num_format`].
-///
-/// The ordinal enumeration mirrors the C++ `NumShapeType` enum:
-///
-/// ```text
-/// 0  = DIGIT
-/// 1  = CIRCLED_DIGIT
-/// 2  = ROMAN_CAPITAL
-/// 3  = ROMAN_SMALL
-/// 4  = LATIN_CAPITAL
-/// 5  = LATIN_SMALL
-/// 6  = CIRCLED_LATIN_CAPITAL
-/// 7  = CIRCLED_LATIN_SMALL
-/// 8  = HANGUL_SYLLABLE
-/// 9  = CIRCLED_HANGUL_SYLLABLE
-/// 10 = HANGUL_JAMO
-/// 11 = CIRCLED_HANGUL_JAMO
-/// 12 = HANGUL_PHONETIC
-/// 13 = IDEOGRAPH
-/// 14 = CIRCLED_IDEOGRAPH
-/// 15 = DECAGON_CIRCLE
-/// 16 = DECAGON_CIRCLE_HANJA
-/// ```
-///
-/// Unknown ordinals map to `""` so the `!=` comparison that follows will
-/// always fire — treating an unknown spec value as a definite mismatch is
-/// the safe / conservative choice.
-fn num_shape_ordinal_to_str(ordinal: u32) -> &'static str {
-    match ordinal {
-        0 => "DIGIT",
-        1 => "CIRCLED_DIGIT",
-        2 => "ROMAN_CAPITAL",
-        3 => "ROMAN_SMALL",
-        4 => "LATIN_CAPITAL",
-        5 => "LATIN_SMALL",
-        6 => "CIRCLED_LATIN_CAPITAL",
-        7 => "CIRCLED_LATIN_SMALL",
-        8 => "HANGUL_SYLLABLE",
-        9 => "CIRCLED_HANGUL_SYLLABLE",
-        10 => "HANGUL_JAMO",
-        11 => "CIRCLED_HANGUL_JAMO",
-        12 => "HANGUL_PHONETIC",
-        13 => "IDEOGRAPH",
-        14 => "CIRCLED_IDEOGRAPH",
-        15 => "DECAGON_CIRCLE",
-        16 => "DECAGON_CIRCLE_HANJA",
-        _ => "",
-    }
-}
-
-/// Build a [`DvcErrorInfo`] from a representative run and an error code.
-fn make_error(run: &RunTypeInfo, error_code: u32) -> DvcErrorInfo {
-    DvcErrorInfo {
-        para_pr_id_ref: run.para_pr_id_ref,
-        char_pr_id_ref: run.char_pr_id_ref,
-        text: run.text.clone(),
-        page_no: run.page_no,
-        line_no: run.line_no,
-        error_code,
-        table_id: run.table_id,
-        is_in_table: run.is_in_table,
-        is_in_table_in_table: run.is_in_table_in_table,
-        table_row: run.table_row,
-        table_col: run.table_col,
-        is_in_shape: run.is_in_shape,
-        use_hyperlink: run.is_hyperlink,
-        use_style: run.is_style,
-        error_string: crate::error::error_string(error_code, ErrorContext::default()),
-    }
-}
+// All shared helpers (num_shape_to_str, make_error, check_level_sequence)
+// live in `crate::checker::numbering`. This module has no private helpers
+// of its own beyond those delegations above.
 
 // ---------------------------------------------------------------------------
 // Unit tests
@@ -783,17 +702,18 @@ mod tests {
     }
 
     // -----------------------------------------------------------------------
-    // num_shape_ordinal_to_str
+    // num_shape_to_str (via shared numbering helper)
     // -----------------------------------------------------------------------
 
     #[test]
     fn ordinal_mapping_spot_checks() {
-        assert_eq!(num_shape_ordinal_to_str(0), "DIGIT");
-        assert_eq!(num_shape_ordinal_to_str(1), "CIRCLED_DIGIT");
-        assert_eq!(num_shape_ordinal_to_str(8), "HANGUL_SYLLABLE");
-        assert_eq!(num_shape_ordinal_to_str(9), "CIRCLED_HANGUL_SYLLABLE");
-        assert_eq!(num_shape_ordinal_to_str(10), "HANGUL_JAMO");
-        assert_eq!(num_shape_ordinal_to_str(16), "DECAGON_CIRCLE_HANJA");
-        assert_eq!(num_shape_ordinal_to_str(99), ""); // unknown → empty
+        use crate::checker::numbering::num_shape_to_str;
+        assert_eq!(num_shape_to_str(0), Some("DIGIT"));
+        assert_eq!(num_shape_to_str(1), Some("CIRCLED_DIGIT"));
+        assert_eq!(num_shape_to_str(8), Some("HANGUL_SYLLABLE"));
+        assert_eq!(num_shape_to_str(9), Some("CIRCLED_HANGUL_SYLLABLE"));
+        assert_eq!(num_shape_to_str(10), Some("HANGUL_JAMO"));
+        assert_eq!(num_shape_to_str(16), Some("DECAGON_CIRCLE_HANJA"));
+        assert_eq!(num_shape_to_str(99), None); // unknown → None
     }
 }

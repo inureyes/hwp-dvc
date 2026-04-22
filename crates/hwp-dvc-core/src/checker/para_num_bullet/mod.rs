@@ -22,10 +22,9 @@
 //!
 //! # Level walking
 //!
-//! TODO: Issue #45 will unify the level-walker logic between this module and
-//! `checker::outline_shape` into a shared `checker::level_walk` helper to
-//! avoid duplication. For now the two modules keep their own copies. See the
-//! Epic #38 technical notes for context.
+//! The level-walker logic (number-shape ordinal mapping, level-count and
+//! level-index validation) is shared with `checker::outline_shape` via the
+//! [`crate::checker::numbering`] helper module introduced by issue #45.
 //!
 //! # Covered error codes
 //!
@@ -45,15 +44,13 @@
 
 use std::collections::HashSet;
 
+use crate::checker::numbering as num_walker;
 use crate::checker::DvcErrorInfo;
 use crate::document::header::{HeadingType, Numbering, ParaHead};
 use crate::document::{Document, RunTypeInfo};
-use crate::error::{
-    para_num_bullet_codes::{
-        PARANUM_LEVELTYPE, PARANUM_LEVELTYPE_LEVEL, PARANUM_LEVEL_NUMBERSHAPE,
-        PARANUM_LEVEL_NUMBERTYPE, PARANUM_STARTNUMBER, PARANUM_VALUE,
-    },
-    ErrorContext,
+use crate::error::para_num_bullet_codes::{
+    PARANUM_LEVELTYPE, PARANUM_LEVELTYPE_LEVEL, PARANUM_LEVEL_NUMBERSHAPE,
+    PARANUM_LEVEL_NUMBERTYPE, PARANUM_STARTNUMBER, PARANUM_VALUE,
 };
 use crate::spec::ParaNumBulletSpec;
 
@@ -122,7 +119,7 @@ pub fn check(document: &Document, spec: &ParaNumBulletSpec) -> Vec<DvcErrorInfo>
         if let Some(expected_restart) = spec.start_number {
             let doc_restarts = numbering.start != 0;
             if doc_restarts != expected_restart {
-                errors.push(make_error(run, PARANUM_STARTNUMBER));
+                errors.push(num_walker::make_error(run, PARANUM_STARTNUMBER));
             }
         }
 
@@ -133,7 +130,7 @@ pub fn check(document: &Document, spec: &ParaNumBulletSpec) -> Vec<DvcErrorInfo>
         if let Some(expected_value) = spec.value {
             let first_head_start = numbering.para_heads.first().map(|ph| ph.start).unwrap_or(0);
             if first_head_start != expected_value {
-                errors.push(make_error(run, PARANUM_VALUE));
+                errors.push(num_walker::make_error(run, PARANUM_VALUE));
             }
         }
 
@@ -146,7 +143,7 @@ pub fn check(document: &Document, spec: &ParaNumBulletSpec) -> Vec<DvcErrorInfo>
             None => {
                 // No paraHead found for this heading level even though the spec
                 // declares leveltype constraints — emit the wrapper error (3404).
-                errors.push(make_error(run, PARANUM_LEVELTYPE));
+                errors.push(num_walker::make_error(run, PARANUM_LEVELTYPE));
                 continue;
             }
         };
@@ -196,7 +193,7 @@ fn check_para_head(
     // reached, but we emit the error defensively so that callers driving the
     // check with a pre-resolved spec entry do not silently skip it.
     if spec_level.level != para_head.level {
-        errors.push(make_error(run, PARANUM_LEVELTYPE_LEVEL));
+        errors.push(num_walker::make_error(run, PARANUM_LEVELTYPE_LEVEL));
     }
 
     // --- numbertype check (3406) ---
@@ -205,7 +202,7 @@ fn check_para_head(
     // holds the OWPML `numFormat` attribute value.
     if let Some(ref expected_nt) = spec_level.numbertype {
         if *expected_nt != para_head.num_format {
-            errors.push(make_error(run, PARANUM_LEVEL_NUMBERTYPE));
+            errors.push(num_walker::make_error(run, PARANUM_LEVEL_NUMBERTYPE));
         }
     }
 
@@ -213,84 +210,20 @@ fn check_para_head(
     // The spec's `numbershape` field is a u32 ordinal that maps to the
     // `NumberShapeType` enum in the reference C++. We convert it to the
     // corresponding OWPML `numFormat` attribute string and compare.
-    let expected_shape_str = number_shape_to_format_str(spec_level.numbershape);
-    if let Some(expected_str) = expected_shape_str {
+    // Unknown ordinals return `None` and skip the comparison (future-proofing).
+    if let Some(expected_str) = num_walker::num_shape_to_str(spec_level.numbershape) {
         if expected_str != para_head.num_format {
-            errors.push(make_error(run, PARANUM_LEVEL_NUMBERSHAPE));
+            errors.push(num_walker::make_error(run, PARANUM_LEVEL_NUMBERSHAPE));
         }
     }
 }
 
-/// Map a `NumberShapeType` ordinal (from the DVC spec JSON) to the
-/// corresponding OWPML `numFormat` attribute string.
-///
-/// The mapping mirrors the `NumberShapeType` enum in
-/// `references/dvc/Source/DVCInterface.h`:
-///
-/// ```text
-/// DIGIT                  = 0
-/// CIRCLED_DIGIT          = 1
-/// ROMAN_CAPITAL          = 2
-/// ROMAN_SMALL            = 3
-/// LATIN_CAPITAL          = 4
-/// LATIN_SMALL            = 5
-/// CIRCLED_LATIN_CAPITAL  = 6
-/// CIRCLED_LATIN_SMALL    = 7
-/// HANGUL_SYLLABLE        = 8
-/// CIRCLED_HANGUL_SYLLABLE= 9
-/// HANGUL_JAMO            = 10
-/// CIRCLED_HANGUL_JAMO    = 11
-/// HANGUL_PHONETIC        = 12
-/// IDEOGRAPH              = 13
-/// CIRCLED_IDEOGRAPH      = 14
-/// DECAGON_CIRCLE         = 15
-/// DECAGON_CIRCLE_HANJA   = 16
-/// ```
-///
-/// Returns `None` for unknown ordinals (future-proofing).
-fn number_shape_to_format_str(ordinal: u32) -> Option<&'static str> {
-    match ordinal {
-        0 => Some("DIGIT"),
-        1 => Some("CIRCLED_DIGIT"),
-        2 => Some("ROMAN_CAPITAL"),
-        3 => Some("ROMAN_SMALL"),
-        4 => Some("LATIN_CAPITAL"),
-        5 => Some("LATIN_SMALL"),
-        6 => Some("CIRCLED_LATIN_CAPITAL"),
-        7 => Some("CIRCLED_LATIN_SMALL"),
-        8 => Some("HANGUL_SYLLABLE"),
-        9 => Some("CIRCLED_HANGUL_SYLLABLE"),
-        10 => Some("HANGUL_JAMO"),
-        11 => Some("CIRCLED_HANGUL_JAMO"),
-        12 => Some("HANGUL_PHONETIC"),
-        13 => Some("IDEOGRAPH"),
-        14 => Some("CIRCLED_IDEOGRAPH"),
-        15 => Some("DECAGON_CIRCLE"),
-        16 => Some("DECAGON_CIRCLE_HANJA"),
-        _ => None,
-    }
-}
-
-/// Build a [`DvcErrorInfo`] from a representative run and an error code.
-fn make_error(run: &RunTypeInfo, error_code: u32) -> DvcErrorInfo {
-    DvcErrorInfo {
-        para_pr_id_ref: run.para_pr_id_ref,
-        char_pr_id_ref: run.char_pr_id_ref,
-        text: run.text.clone(),
-        page_no: run.page_no,
-        line_no: run.line_no,
-        error_code,
-        table_id: run.table_id,
-        is_in_table: run.is_in_table,
-        is_in_table_in_table: run.is_in_table_in_table,
-        table_row: run.table_row,
-        table_col: run.table_col,
-        is_in_shape: run.is_in_shape,
-        use_hyperlink: run.is_hyperlink,
-        use_style: run.is_style,
-        error_string: crate::error::error_string(error_code, ErrorContext::default()),
-    }
-}
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+// All shared helpers (num_shape_to_str via num_walker::num_shape_to_str,
+// make_error via num_walker::make_error) now live in
+// `crate::checker::numbering`. This module has no private helpers of its own.
 
 // ---------------------------------------------------------------------------
 // Unit tests
@@ -808,11 +741,12 @@ mod tests {
     }
 
     // -------------------------------------------------------------------------
-    // number_shape_to_format_str mapping
+    // num_shape_to_str mapping (via shared numbering helper)
     // -------------------------------------------------------------------------
 
     #[test]
     fn number_shape_mapping_covers_all_known_ordinals() {
+        use crate::checker::numbering::num_shape_to_str;
         let known = [
             (0u32, "DIGIT"),
             (1, "CIRCLED_DIGIT"),
@@ -834,13 +768,13 @@ mod tests {
         ];
         for (ordinal, expected) in known {
             assert_eq!(
-                number_shape_to_format_str(ordinal),
+                num_shape_to_str(ordinal),
                 Some(expected),
                 "ordinal {ordinal} must map to {expected}"
             );
         }
         assert_eq!(
-            number_shape_to_format_str(17),
+            num_shape_to_str(17),
             None,
             "unknown ordinal must return None"
         );

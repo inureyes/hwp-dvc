@@ -8,6 +8,7 @@ pub mod bullet;
 pub mod char_shape;
 pub mod hyperlink;
 pub mod macro_;
+pub mod numbering;
 pub mod outline_shape;
 pub mod para_num_bullet;
 pub mod para_shape;
