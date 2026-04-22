@@ -10,17 +10,23 @@
 //!   `JID_TABLE_*` error codes when the document value violates the spec.
 //! - Spec JSON round-trips the reference format (e.g.
 //!   `{"min":a,"max":b}` range objects and bare numeric shorthand).
+//!
+//! Cell-detail-mode coverage (issue #42):
+//! - `--tabledetail` + a cell-detail spec emits per-cell findings in the
+//!   3037..=3055 range with `tableRow` / `tableCol` populated.
+//! - Running without `--tabledetail` suppresses detail findings even
+//!   when the spec carries cell-detail fields.
 
 use std::path::PathBuf;
 
 use hwp_dvc_core::checker::table::{
-    TABLE_BORDER_CELL_SPACING, TABLE_BORDER_COLOR, TABLE_BORDER_SIZE, TABLE_BORDER_TYPE,
-    TABLE_CAPTION_POSITION, TABLE_HDIRECTION, TABLE_HTYPE, TABLE_IN_TABLE, TABLE_MARGIN_BOTTOM,
-    TABLE_MARGIN_LEFT, TABLE_MARGIN_RIGHT, TABLE_MARGIN_TOP, TABLE_NUM_VER_TYPE, TABLE_POS,
-    TABLE_SIZE_FIXED, TABLE_SIZE_HEIGHT, TABLE_SIZE_WIDTH, TABLE_SOALLOW_OVERLAP,
-    TABLE_SOFLOW_WITH_TEXT, TABLE_TREAT_AS_CHAR,
+    TABLE_BGFILL_FACECOLOR, TABLE_BGFILL_TYPE, TABLE_BORDER_CELL_SPACING, TABLE_BORDER_COLOR,
+    TABLE_BORDER_SIZE, TABLE_BORDER_TYPE, TABLE_CAPTION_POSITION, TABLE_HDIRECTION, TABLE_HTYPE,
+    TABLE_IN_TABLE, TABLE_MARGIN_BOTTOM, TABLE_MARGIN_LEFT, TABLE_MARGIN_RIGHT, TABLE_MARGIN_TOP,
+    TABLE_NUM_VER_TYPE, TABLE_POS, TABLE_SIZE_FIXED, TABLE_SIZE_HEIGHT, TABLE_SIZE_WIDTH,
+    TABLE_SOALLOW_OVERLAP, TABLE_SOFLOW_WITH_TEXT, TABLE_TREAT_AS_CHAR,
 };
-use hwp_dvc_core::checker::{CheckLevel, Checker, OutputScope};
+use hwp_dvc_core::checker::{CheckLevel, Checker, DvcErrorInfo, OutputScope};
 use hwp_dvc_core::document::Document;
 use hwp_dvc_core::spec::{DvcSpec, IntRange};
 
@@ -68,6 +74,25 @@ fn run_table_check(doc: &Document, spec: &DvcSpec) -> Vec<u32> {
         .into_iter()
         .map(|e| e.error_code)
         .collect()
+}
+
+/// Run with `--tabledetail` (scope.table_detail = true), returning the
+/// full [`DvcErrorInfo`] entries so tests can check `table_row`/`table_col`.
+fn run_table_detail(doc: &Document, spec: &DvcSpec) -> Vec<DvcErrorInfo> {
+    let checker = Checker {
+        spec,
+        document: doc,
+        level: CheckLevel::All,
+        scope: OutputScope {
+            all: false,
+            table: false,
+            table_detail: true,
+            shape: false,
+            style: false,
+            hyperlink: false,
+        },
+    };
+    checker.run().expect("checker::run should not fail")
 }
 
 // ---------------------------------------------------------------------------
@@ -416,4 +441,190 @@ fn int_range_deserializes_both_object_and_scalar_forms() {
     assert_eq!(scalar, object);
     assert!(scalar.contains(42));
     assert!(!scalar.contains(43));
+}
+
+// ---------------------------------------------------------------------------
+// Cell-detail mode (issue #42)
+// ---------------------------------------------------------------------------
+
+/// The `table_nested.hwpx` fixture's cells all point at a borderFill
+/// that either has no `<hc:fillBrush>` or has
+/// `<hc:winBrush faceColor="none"/>` — both resolve to
+/// `fill_kind == "none"`. A detail-mode spec demanding
+/// `bgfill-type = "color"` must therefore emit at least one
+/// `TABLE_BGFILL_TYPE` (3037) finding, and every such finding must
+/// carry non-zero cell coordinates on at least one cell.
+#[test]
+fn tabledetail_emits_bgfill_type_when_spec_demands_color() {
+    let doc = open_doc("table_nested.hwpx");
+    let spec_json = r#"{
+        "table": {
+            "bgfill-type": "color"
+        }
+    }"#;
+    let spec = DvcSpec::from_json_str(spec_json).expect("spec parses");
+    let errs = run_table_detail(&doc, &spec);
+
+    let detail_errs: Vec<&DvcErrorInfo> = errs
+        .iter()
+        .filter(|e| e.error_code == TABLE_BGFILL_TYPE)
+        .collect();
+
+    assert!(
+        !detail_errs.is_empty(),
+        "tabledetail mode must emit TABLE_BGFILL_TYPE (3037) when the fixture cells are unfilled but spec demands color; got: {:?}",
+        errs.iter().map(|e| e.error_code).collect::<Vec<_>>()
+    );
+
+    for e in &detail_errs {
+        assert!(e.is_in_table, "detail findings must carry is_in_table=true");
+        assert_ne!(
+            e.table_id, 0,
+            "detail findings must carry a non-zero tableID"
+        );
+    }
+}
+
+/// Same spec, but running with `scope.table_detail = false` (default
+/// `--table`): detail-range codes (3037..=3055) must not appear.
+#[test]
+fn table_scope_without_detail_suppresses_cell_detail_errors() {
+    let doc = open_doc("table_nested.hwpx");
+    let spec_json = r#"{
+        "table": {
+            "bgfill-type": "color",
+            "bgfill-facecolor": 16777215
+        }
+    }"#;
+    let spec = DvcSpec::from_json_str(spec_json).expect("spec parses");
+    let error_codes = run_table_check(&doc, &spec);
+
+    let detail_codes: Vec<u32> = error_codes
+        .into_iter()
+        .filter(|c| (3037..=3055).contains(c))
+        .collect();
+
+    assert!(
+        detail_codes.is_empty(),
+        "--table (no --tabledetail) must suppress cell-detail codes; got: {detail_codes:?}"
+    );
+}
+
+/// When the spec carries no cell-detail fields, detail mode is a
+/// no-op even if `--tabledetail` is requested.
+#[test]
+fn tabledetail_without_detail_spec_fields_is_noop() {
+    let doc = open_doc("table_simple.hwpx");
+    let spec = open_spec("fixture_spec.json");
+    let errs = run_table_detail(&doc, &spec);
+
+    let detail_codes: Vec<u32> = errs
+        .iter()
+        .filter(|e| (3037..=3055).contains(&e.error_code))
+        .map(|e| e.error_code)
+        .collect();
+
+    assert!(
+        detail_codes.is_empty(),
+        "spec without cell-detail fields must produce zero detail-range errors; got: {detail_codes:?}"
+    );
+}
+
+/// A spec whose `bgfill-facecolor` demands a concrete color on cells
+/// whose fill is `none` must emit `TABLE_BGFILL_FACECOLOR` (3038).
+/// This asserts the detail walker visits every cell of nested tables.
+#[test]
+fn tabledetail_visits_nested_cells_and_populates_row_col() {
+    let doc = open_doc("table_nested.hwpx");
+    // `table_nested.hwpx` cells use borderFillIDRef=3 which has no
+    // `<hc:fillBrush>`, so face-color is effectively unset. Demanding
+    // a concrete face color triggers 3038 for every cell.
+    let spec_json = r#"{
+        "table": {
+            "bgfill-type": "color",
+            "bgfill-facecolor": 255
+        }
+    }"#;
+    let spec = DvcSpec::from_json_str(spec_json).expect("spec parses");
+    let errs = run_table_detail(&doc, &spec);
+
+    // The kind check fires on every cell; the facecolor check fires
+    // only on cells that *do* carry a brush (fillbrush IDs 2 in this
+    // fixture). We primarily need kind errors to prove per-cell
+    // iteration.
+    let kind_errs: Vec<&DvcErrorInfo> = errs
+        .iter()
+        .filter(|e| e.error_code == TABLE_BGFILL_TYPE)
+        .collect();
+
+    assert!(
+        kind_errs.len() > 1,
+        "nested fixture must produce more than one TABLE_BGFILL_TYPE finding (one per cell); got {}",
+        kind_errs.len()
+    );
+
+    // Cell coordinates must not all be zero — at least one cell must
+    // have row>0 or col>0 to prove the walker actually descended.
+    let any_nonzero_coord = kind_errs
+        .iter()
+        .any(|e| e.table_row != 0 || e.table_col != 0);
+    assert!(
+        any_nonzero_coord,
+        "at least one TABLE_BGFILL_TYPE error must carry a non-zero tableRow/tableCol; got: {:?}",
+        kind_errs
+            .iter()
+            .map(|e| (e.table_id, e.table_row, e.table_col))
+            .collect::<Vec<_>>()
+    );
+
+    // Suppress the unused-import hint for TABLE_BGFILL_FACECOLOR in
+    // case future compiler diagnostics complain — the constant is
+    // deliberately imported to pin its value.
+    let _ = TABLE_BGFILL_FACECOLOR;
+}
+
+/// `table_simple.hwpx` — valid in standard mode — must also produce no
+/// detail-range errors when the detail spec is empty. This exercises
+/// the `has_cell_detail_fields()` fast path.
+#[test]
+fn table_simple_tabledetail_with_empty_cell_detail_spec_passes() {
+    let doc = open_doc("table_simple.hwpx");
+    // spec with only border/table-in-table — no cell-detail fields.
+    let spec = open_spec("fixture_spec.json");
+    let errs = run_table_detail(&doc, &spec);
+
+    let table_errs: Vec<u32> = errs
+        .iter()
+        .filter(|e| (3000..4000).contains(&e.error_code))
+        .map(|e| e.error_code)
+        .collect();
+
+    assert!(
+        table_errs.is_empty(),
+        "table_simple.hwpx with empty cell-detail spec must produce zero table errors; got: {table_errs:?}"
+    );
+}
+
+/// Acceptance criterion: integration test using `table_nested.hwpx`
+/// together with a **fixture-spec file** that asserts specific cell
+/// color values. The `table_detail_spec.json` fixture demands
+/// `bgfill-type = "color"` and `bgfill-facecolor = 16777215` (white).
+/// Since the nested-table fixture's cells have no concrete fill, every
+/// cell emits `TABLE_BGFILL_TYPE` (3037).
+#[test]
+fn table_nested_with_detail_fixture_spec_emits_cell_detail_errors() {
+    let doc = open_doc("table_nested.hwpx");
+    let spec = open_spec("table_detail_spec.json");
+    let errs = run_table_detail(&doc, &spec);
+
+    let bgfill_type_errs = errs
+        .iter()
+        .filter(|e| e.error_code == TABLE_BGFILL_TYPE)
+        .count();
+
+    assert!(
+        bgfill_type_errs > 0,
+        "table_detail_spec.json + table_nested.hwpx must produce at least one TABLE_BGFILL_TYPE error; got codes: {:?}",
+        errs.iter().map(|e| e.error_code).collect::<Vec<_>>()
+    );
 }

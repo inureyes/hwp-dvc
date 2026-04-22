@@ -89,10 +89,62 @@ pub struct Border {
     pub color: String,
 }
 
+/// The inner `<hc:fillBrush>` of a [`BorderFill`], decoded into the
+/// three mutually-exclusive shapes the detail-mode validator needs.
+///
+/// OWPML `<hc:fillBrush>` contains exactly one of:
+/// - `<hc:winBrush>` — a flat ("solid") color fill. `<hc:winBrush>` is
+///   always present (HWPX emitters include `faceColor="none"` when the
+///   cell is unfilled), so `Solid { face: "none", .. }` encodes the
+///   no-fill case.
+/// - `<hc:gradation>` — a gradient fill with start/end colors, shape,
+///   and geometry.
+/// - `<hc:imgBrush>` — a picture / image fill.
+///
+/// The variant fields mirror what the per-cell validator in
+/// `checker::table::detail` compares against [`crate::spec::TableSpec`].
+#[derive(Debug, Clone, PartialEq)]
+pub enum CellFillBrush {
+    /// `<hc:winBrush>` — solid / flat color fill. `face` is the
+    /// `faceColor` attribute verbatim (e.g. `"none"` or `"#FF0000"`);
+    /// `hatch` is the `hatchColor` attribute; `alpha` is the 0..=255
+    /// alpha value.
+    Solid {
+        face: String,
+        hatch: String,
+        alpha: u32,
+    },
+    /// `<hc:gradation>` — gradient fill. Colors are stored as the raw
+    /// hex strings found in the XML (`"#RRGGBB"`); geometry is kept as
+    /// integers because the reference compares those numerically.
+    Gradation {
+        gradation_type: String,
+        start_color: String,
+        end_color: String,
+        width_center: u32,
+        height_center: u32,
+        angle: u32,
+        blur_level: u32,
+        blur_center: u32,
+    },
+    /// `<hc:imgBrush>` — image / picture fill. `file` is the binary
+    /// reference (e.g. `"bindata://media/image1.png"`).
+    Image {
+        file: String,
+        include: bool,
+        fill_type: String,
+        fill_value: i32,
+        effect_type: String,
+        effect_value: i32,
+        watermark: u32,
+    },
+}
+
 /// A `<hh:borderFill>` record. Only the fields the validators need are
-/// decoded; `<hc:fillBrush>` subtrees are tracked as "present or not"
-/// because `CheckTable` only needs to know that a fill was supplied, not
-/// the exact brush.
+/// decoded. `fill_brush` is `None` when the XML has no `<hc:fillBrush>`
+/// child at all; when present it is decoded into [`CellFillBrush`] so
+/// that the per-cell detail-mode checker can compare colors and effect
+/// values without re-parsing.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct BorderFill {
     pub id: u32,
@@ -108,6 +160,9 @@ pub struct BorderFill {
     pub diagonal: Border,
 
     pub has_fill_brush: bool,
+    /// Decoded `<hc:fillBrush>` sub-tree. `None` when no `<hc:fillBrush>`
+    /// child was present in the XML (older HWPX profiles).
+    pub fill_brush: Option<CellFillBrush>,
 }
 
 impl BorderFill {

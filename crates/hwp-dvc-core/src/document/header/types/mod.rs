@@ -30,6 +30,6 @@ pub use enums::{
     FontLang, HAlign, HeadingType, LangTuple, LineBreakWord, LineSpacingType, LineType, VAlign,
 };
 pub use shapes::{
-    Border, BorderFill, Bullet, CharShape, FontFace, LineSpacing, Margin, Numbering, ParaHead,
-    ParaShape, Style,
+    Border, BorderFill, Bullet, CellFillBrush, CharShape, FontFace, LineSpacing, Margin, Numbering,
+    ParaHead, ParaShape, Style,
 };

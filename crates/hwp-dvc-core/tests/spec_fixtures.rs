@@ -44,3 +44,18 @@ fn hancom_full_catalog_is_readable() {
     assert!(raw.contains("\"parashape\""));
     assert!(raw.contains("\"table\""));
 }
+
+/// The `table_detail_spec.json` fixture (issue #42) must parse into a
+/// [`DvcSpec`] whose `table` section carries at least one cell-detail
+/// field populated.
+#[test]
+fn table_detail_spec_exposes_cell_detail_fields() {
+    let spec = DvcSpec::from_json_file(fixture("table_detail_spec.json"))
+        .expect("table_detail_spec.json should parse");
+    let t = spec.table.expect("table_detail_spec has table section");
+    assert_eq!(t.bgfill_type.as_deref(), Some("color"));
+    assert_eq!(t.bgfill_facecolor, Some(16_777_215));
+    // treat_as_char must remain unset — we want this fixture to be
+    // surgical about what it asserts.
+    assert_eq!(t.treat_as_char, None);
+}

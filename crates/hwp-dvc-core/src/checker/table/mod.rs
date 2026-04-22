@@ -49,6 +49,19 @@
 //! offset attributes. The reference C++ also leaves those cases empty.
 //! See the `// TODO: rotation/gradient` comment inside
 //! [`check_table`] for the reintroduction plan.
+//!
+//! # Cell-detail mode
+//!
+//! When [`OutputScope::table_detail`] is `true` **and** [`TableSpec`]
+//! carries at least one cell-detail field (see
+//! [`TableSpec::has_cell_detail_fields`]), this module runs the
+//! per-cell walker in [`mod@detail`]. Detail-mode findings populate
+//! `table_row` / `table_col` on the resulting [`DvcErrorInfo`] so
+//! downstream output can report which cell violated. Error codes in
+//! detail mode are in the range 3037..=3055 (see
+//! [`crate::error::table_detail_codes`]).
+
+pub(super) mod detail;
 
 use crate::checker::{CheckLevel, DvcErrorInfo, OutputScope};
 use crate::document::header::types::{Border, LineType};
@@ -76,6 +89,19 @@ pub use crate::error::{
     TABLE_TEXT_POS, TABLE_TREAT_AS_CHAR, TABLE_VDIRECTION, TABLE_VTYPE, TABLE_VVALUE,
 };
 
+// Re-export every cell-detail error code under this module so callers
+// and integration tests can reach them via
+// `checker::table::TABLE_BGFILL_TYPE` without importing the
+// `error::table_detail_codes` submodule directly.
+pub use crate::error::table_detail_codes::{
+    TABLE_BGFILL_FACECOLOR, TABLE_BGFILL_PATTONCOLOR, TABLE_BGFILL_PATTONTYPE, TABLE_BGFILL_TYPE,
+    TABLE_BGGRADATION_BLURCENTER, TABLE_BGGRADATION_BLURLEVEL, TABLE_BGGRADATION_ENDCOLOR,
+    TABLE_BGGRADATION_GRADATIONANGLE, TABLE_BGGRADATION_HEIGHTCENTER, TABLE_BGGRADATION_STARTCOLOR,
+    TABLE_BGGRADATION_TYPE, TABLE_BGGRADATION_WIDTHCENTER, TABLE_EFFECT_TYPE, TABLE_EFFECT_VALUE,
+    TABLE_PICTUREFILL_TYPE, TABLE_PICTUREFILL_VALUE, TABLE_PICTURE_FILE, TABLE_PICTURE_INCLUDE,
+    TABLE_WATERMARK,
+};
+
 // ---------------------------------------------------------------------------
 // Public entry point
 // ---------------------------------------------------------------------------
@@ -84,6 +110,10 @@ pub use crate::error::{
 ///
 /// Returns a (possibly empty) vector of [`DvcErrorInfo`] records. The
 /// `level` and `scope` parameters are forwarded from [`crate::checker::Checker`].
+///
+/// When `scope.table_detail` is `true` and `spec` carries cell-detail
+/// fields, this function also walks every cell of every table and
+/// emits findings in the 3037..=3055 range.
 pub fn check(
     document: &Document,
     spec: &TableSpec,
@@ -91,23 +121,29 @@ pub fn check(
     scope: OutputScope,
 ) -> DvcResult<Vec<DvcErrorInfo>> {
     // `OutputScope::allows(ScopeCategory::Table)` is evaluated by the
-    // caller (`Checker::run`). Cell-level `--tabledetail` validation is
-    // a separate mode (tracked in issue #42); this function always runs
-    // the standard-mode rules defined by `JID_TABLE_*` codes 3001-3036
-    // and 3056.
-    let _ = scope;
+    // caller (`Checker::run`). Standard-mode rules (`JID_TABLE_*` codes
+    // 3001-3036 and 3056) always run; cell-detail rules (3037-3055) run
+    // only when `scope.table_detail` is set and the spec opts in via
+    // [`TableSpec::has_cell_detail_fields`].
     let header = match &document.header {
         Some(h) => h,
         None => return Ok(Vec::new()),
     };
 
     let mut errors = Vec::new();
+    let run_detail = scope.table_detail && spec.has_cell_detail_fields();
 
     for section in &document.sections {
         for table in section.all_tables() {
             check_table(table, spec, header, level, &mut errors);
             if level == CheckLevel::Simple && !errors.is_empty() {
                 return Ok(errors);
+            }
+            if run_detail {
+                detail::check_cells(table, spec, header, level, &mut errors);
+                if level == CheckLevel::Simple && !errors.is_empty() {
+                    return Ok(errors);
+                }
             }
         }
     }

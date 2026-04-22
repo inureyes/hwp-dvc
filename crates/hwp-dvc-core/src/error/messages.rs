@@ -107,6 +107,26 @@ const STATIC_MESSAGES_KO: &[(u32, &str)] = &[
     (3033, "표 테두리 선 종류가 허용되지 않습니다"),
     (3034, "표 테두리 선 굵기가 허용되지 않습니다"),
     (3035, "표 테두리 선 색상이 허용되지 않습니다"),
+    // ── Table cell-detail (3037-3055) — --tabledetail only ────────────────
+    (3037, "셀 배경 채우기 종류가 허용되지 않습니다"),
+    (3038, "셀 배경 면 색상이 허용되지 않습니다"),
+    (3039, "셀 배경 무늬 색상이 허용되지 않습니다"),
+    (3040, "셀 배경 무늬 종류가 허용되지 않습니다"),
+    (3041, "셀 그라데이션 시작 색상이 허용되지 않습니다"),
+    (3042, "셀 그라데이션 끝 색상이 허용되지 않습니다"),
+    (3043, "셀 그라데이션 종류가 허용되지 않습니다"),
+    (3044, "셀 그라데이션 가로 중심 값이 허용되지 않습니다"),
+    (3045, "셀 그라데이션 세로 중심 값이 허용되지 않습니다"),
+    (3046, "셀 그라데이션 각도가 허용되지 않습니다"),
+    (3047, "셀 그라데이션 번짐 정도가 허용되지 않습니다"),
+    (3048, "셀 그라데이션 번짐 중심 값이 허용되지 않습니다"),
+    (3049, "셀 그림 파일 참조가 허용되지 않습니다"),
+    (3050, "셀 그림 포함 설정이 허용되지 않습니다"),
+    (3051, "셀 그림 채우기 방식이 허용되지 않습니다"),
+    (3052, "셀 그림 채우기 값이 허용되지 않습니다"),
+    (3053, "셀 그림 효과 종류가 허용되지 않습니다"),
+    (3054, "셀 그림 효과 값이 허용되지 않습니다"),
+    (3055, "셀 워터마크 설정이 허용되지 않습니다"),
     (3056, "표 안에 표가 허용되지 않습니다"),
     // ── SpecialCharacter (3100-range) ─────────────────────────────────────
     (3101, "허용 범위보다 낮은 특수 문자가 포함되어 있습니다"),
@@ -183,6 +203,26 @@ const STATIC_MESSAGES_EN: &[(u32, &str)] = &[
     (3033, "table border line type is not allowed"),
     (3034, "table border line width is not allowed"),
     (3035, "table border color is not allowed"),
+    // Table cell-detail (3037-3055) — emitted only with --tabledetail
+    (3037, "cell background fill type is not allowed"),
+    (3038, "cell background face color is not allowed"),
+    (3039, "cell background pattern color is not allowed"),
+    (3040, "cell background pattern type is not allowed"),
+    (3041, "cell gradient start color is not allowed"),
+    (3042, "cell gradient end color is not allowed"),
+    (3043, "cell gradient type is not allowed"),
+    (3044, "cell gradient width-center value is not allowed"),
+    (3045, "cell gradient height-center value is not allowed"),
+    (3046, "cell gradient angle is not allowed"),
+    (3047, "cell gradient blur level is not allowed"),
+    (3048, "cell gradient blur center is not allowed"),
+    (3049, "cell picture file reference is not allowed"),
+    (3050, "cell picture include flag is not allowed"),
+    (3051, "cell picture fill type is not allowed"),
+    (3052, "cell picture fill value is not allowed"),
+    (3053, "cell picture effect type is not allowed"),
+    (3054, "cell picture effect value is not allowed"),
+    (3055, "cell watermark is not allowed"),
     (3056, "table inside table is not allowed"),
     (
         3101,
@@ -407,8 +447,13 @@ mod tests {
             1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1024, 1025, 1026, 1027, 1028,
             1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039,
             // ParaShape (2000-range)
-            2004, 2005, 2006, 2007, 2008, 2009, 2010, // Table (3000-range)
-            3004, 3033, 3034, 3035, 3056, // SpecialCharacter (3100-range)
+            2004, 2005, 2006, 2007, 2008, 2009, 2010,
+            // Table standard-mode (3000-range)
+            3004, 3033, 3034, 3035,
+            // Table cell-detail (3037-3055) — --tabledetail only
+            3037, 3038, 3039, 3040, 3041, 3042, 3043, 3044, 3045, 3046, 3047, 3048, 3049, 3050,
+            3051, 3052, 3053, 3054, 3055, 3056,
+            // SpecialCharacter (3100-range)
             3101, 3102, // OutlineShape (3200-range)
             3201, 3206, 3207, // Bullet (3300-range)
             3302, 3303, 3304, // ParaNumBullet (3400-range)
@@ -420,6 +465,22 @@ mod tests {
         for &code in codes {
             let msg = error_string(code, ctx());
             assert!(!msg.is_empty(), "code {code} must have a non-empty message");
+        }
+    }
+
+    #[test]
+    fn table_detail_codes_mention_cell_in_korean() {
+        // Each cell-level detail code should begin with "셀" (cell) in Korean.
+        let cell_codes: &[u32] = &[
+            3037, 3038, 3039, 3040, 3041, 3042, 3043, 3044, 3045, 3046, 3047, 3048, 3049, 3050,
+            3051, 3052, 3053, 3054, 3055,
+        ];
+        for &code in cell_codes {
+            let msg = error_string(code, ctx());
+            assert!(
+                msg.contains("셀"),
+                "table-detail code {code} must mention 셀 (cell): {msg}"
+            );
         }
     }
 }

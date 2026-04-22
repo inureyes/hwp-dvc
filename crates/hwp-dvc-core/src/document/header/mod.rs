@@ -23,9 +23,9 @@ pub mod types;
 use std::collections::HashMap;
 
 pub use types::{
-    Border, BorderFill, Bullet, CharShape, FontFace, FontLang, HAlign, HeadingType, LangTuple,
-    LineBreakWord, LineSpacing, LineSpacingType, LineType, Margin, Numbering, ParaHead, ParaShape,
-    Style, VAlign,
+    Border, BorderFill, Bullet, CellFillBrush, CharShape, FontFace, FontLang, HAlign, HeadingType,
+    LangTuple, LineBreakWord, LineSpacing, LineSpacingType, LineType, Margin, Numbering, ParaHead,
+    ParaShape, Style, VAlign,
 };
 
 /// The parsed header-side shape tables for an HWPX document.

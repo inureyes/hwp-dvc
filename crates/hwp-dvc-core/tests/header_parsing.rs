@@ -18,7 +18,7 @@
 
 use std::path::PathBuf;
 
-use hwp_dvc_core::document::header::{FontLang, HeaderTables};
+use hwp_dvc_core::document::header::{CellFillBrush, FontLang, HeaderTables};
 use hwp_dvc_core::document::HwpxArchive;
 
 /// Absolute path to a fixture under `tests/fixtures/docs/`.
@@ -150,6 +150,51 @@ fn style_custom_header_has_user_style() {
     assert!(
         tables.style_by_name("바탕글").is_some(),
         "built-in 바탕글 style must coexist with the user-defined style"
+    );
+}
+
+#[test]
+fn table_nested_borderfill_decodes_solid_winbrush() {
+    // The `table_nested.hwpx` fixture contains `<hc:fillBrush>` carrying
+    // `<hc:winBrush faceColor="none" hatchColor="#999999" alpha="0"/>`
+    // on exactly one of its three borderFills. Verify the parser
+    // exposes that as a `CellFillBrush::Solid` variant.
+    let tables = load_header("table_nested.hwpx");
+
+    let has_solid_brush = tables.border_fills.values().any(|bf| {
+        matches!(
+            bf.fill_brush.as_ref(),
+            Some(CellFillBrush::Solid { face, hatch, .. })
+                if face.eq_ignore_ascii_case("none") && hatch == "#999999"
+        )
+    });
+
+    assert!(
+        has_solid_brush,
+        "expected at least one BorderFill with a Solid fill brush (face=none, hatch=#999999); \
+         got fill brushes: {:?}",
+        tables
+            .border_fills
+            .values()
+            .map(|bf| (bf.id, bf.fill_brush.clone()))
+            .collect::<Vec<_>>()
+    );
+
+    // At least one BorderFill must have no <hc:fillBrush> at all —
+    // id=1 and id=3 in the fixture lack the element.
+    let has_no_brush = tables
+        .border_fills
+        .values()
+        .any(|bf| bf.fill_brush.is_none() && !bf.has_fill_brush);
+
+    assert!(
+        has_no_brush,
+        "expected at least one BorderFill without a <hc:fillBrush> child; got has_fill_brush flags: {:?}",
+        tables
+            .border_fills
+            .values()
+            .map(|bf| (bf.id, bf.has_fill_brush))
+            .collect::<Vec<_>>()
     );
 }
 
