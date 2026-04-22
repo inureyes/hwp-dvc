@@ -69,8 +69,8 @@ fn is_parashape(code: u32) -> bool {
 #[test]
 fn horizontal_alignment_pass_with_justify_spec() {
     let doc = parse_doc("parashape_pass.hwpx");
-    let spec = DvcSpec::from_json_str(r#"{ "parashape": { "horizontal": 0 } }"#)
-        .expect("spec must parse");
+    let spec =
+        DvcSpec::from_json_str(r#"{ "parashape": { "horizontal": 0 } }"#).expect("spec must parse");
     let errs = run_checker(&doc, &spec);
     let halign_errs: Vec<_> = errs
         .iter()
@@ -91,8 +91,8 @@ fn horizontal_alignment_pass_with_justify_spec() {
 #[test]
 fn horizontal_alignment_fail_when_spec_mismatches_document() {
     let doc = parse_doc("parashape_pass.hwpx");
-    let spec = DvcSpec::from_json_str(r#"{ "parashape": { "horizontal": 3 } }"#)
-        .expect("spec must parse");
+    let spec =
+        DvcSpec::from_json_str(r#"{ "parashape": { "horizontal": 3 } }"#).expect("spec must parse");
     let errs = run_checker(&doc, &spec);
     assert!(
         errs.iter().any(|e| e.error_code == PARASHAPE_HORIZONTAL),
