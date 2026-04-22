@@ -69,6 +69,7 @@ pub fn build_run_type_infos(header: &HeaderTables, sections: &[Section]) -> Vec<
         let ctx = SectionCtx {
             outline_shape_id_ref: section.outline_shape_id_ref,
             default_style_id: default_style,
+            header,
         };
         for paragraph in &section.paragraphs {
             walk_paragraph(&ctx, paragraph, /* cell = */ None, &mut out);
@@ -102,7 +103,7 @@ pub fn default_style_id(header: &HeaderTables) -> u32 {
 /// Section-wide context used by the walker. One per section —
 /// intentionally cheap to copy because the walker passes it by
 /// reference.
-struct SectionCtx {
+struct SectionCtx<'a> {
     /// The `outlineShapeIDRef` resolved from `<hp:secPr>` at section
     /// parse time. Mirrors the C++ reference's per-section resolution;
     /// see `RunTypeInfo::outline_shape_id_ref`.
@@ -110,6 +111,9 @@ struct SectionCtx {
     /// The style id corresponding to 바탕글. A paragraph whose
     /// `style_id_ref` equals this value is considered "unstyled".
     default_style_id: u32,
+    /// Reference to the header tables so the walker can resolve
+    /// `style_id_ref` → style name for `RunTypeInfo::style_name`.
+    header: &'a HeaderTables,
 }
 
 /// Table-cell context accumulated as the walker descends into nested
@@ -135,12 +139,22 @@ struct CellCtx {
 /// Walk one [`Paragraph`], emitting one [`RunTypeInfo`] per run and
 /// recursing into any tables owned by the paragraph.
 fn walk_paragraph(
-    ctx: &SectionCtx,
+    ctx: &SectionCtx<'_>,
     p: &Paragraph,
     cell: Option<CellCtx>,
     out: &mut Vec<RunTypeInfo>,
 ) {
     let is_style = p.style_id_ref != ctx.default_style_id;
+    // Resolve the style name once per paragraph; all runs in the paragraph
+    // share the same style. Returns an empty string when the style id is
+    // not present in the header (malformed document) — the `is_style` flag
+    // still reflects whether the style differs from 바탕글.
+    let style_name = ctx
+        .header
+        .styles
+        .get(&p.style_id_ref)
+        .map(|s| s.name.clone())
+        .unwrap_or_default();
     for run in &p.runs {
         let mut info = RunTypeInfo {
             char_pr_id_ref: run.char_pr_id_ref,
@@ -153,6 +167,7 @@ fn walk_paragraph(
             outline_shape_id_ref: ctx.outline_shape_id_ref,
             is_hyperlink: run.is_hyperlink,
             is_style,
+            style_name: style_name.clone(),
             // `is_in_shape` stays false for issue #4 (see module doc).
             is_in_shape: false,
             ..RunTypeInfo::default()
@@ -175,7 +190,7 @@ fn walk_paragraph(
 /// Walk one [`Table`], recursing into each cell's paragraphs. The
 /// table's own `nesting_depth` is used to seed `is_table_in_table`
 /// for the runs discovered inside its cells.
-fn walk_table(ctx: &SectionCtx, t: &Table, out: &mut Vec<RunTypeInfo>) {
+fn walk_table(ctx: &SectionCtx<'_>, t: &Table, out: &mut Vec<RunTypeInfo>) {
     // The reference reports the cell's enclosing table id — not the
     // outermost table. The walker naturally satisfies that because
     // it visits the cell via its direct parent table, so `t.id` here
@@ -189,7 +204,7 @@ fn walk_table(ctx: &SectionCtx, t: &Table, out: &mut Vec<RunTypeInfo>) {
 }
 
 fn walk_cell(
-    ctx: &SectionCtx,
+    ctx: &SectionCtx<'_>,
     table_id: u32,
     cell: &Cell,
     is_table_in_table: bool,
@@ -423,5 +438,44 @@ mod tests {
         // must still return a sensible u32 rather than panic.
         let h = HeaderTables::default();
         assert_eq!(default_style_id(&h), 0);
+    }
+
+    #[test]
+    fn style_name_is_populated_from_header() {
+        // Build a header with two styles: 바탕글 (id=0) and 본문 (id=1).
+        let mut h = header_with_default_style(0);
+        h.styles.insert(
+            1,
+            crate::document::header::Style {
+                id: 1,
+                style_type: "PARA".into(),
+                name: "본문".into(),
+                ..Default::default()
+            },
+        );
+        let mut s = Section::default();
+        // Paragraph using 바탕글 (id=0).
+        s.paragraphs.push(plain_paragraph(0, 0, "default"));
+        // Paragraph using 본문 (id=1).
+        s.paragraphs.push(plain_paragraph(1, 0, "body"));
+
+        let infos = build_run_type_infos(&h, &[s]);
+        assert_eq!(infos.len(), 2);
+        let default_run = infos.iter().find(|i| i.text == "default").unwrap();
+        assert_eq!(default_run.style_name, "바탕글");
+        let body_run = infos.iter().find(|i| i.text == "body").unwrap();
+        assert_eq!(body_run.style_name, "본문");
+    }
+
+    #[test]
+    fn style_name_is_empty_when_style_id_not_in_header() {
+        // A paragraph whose style_id_ref points to a non-existent entry
+        // should produce an empty style_name rather than panicking.
+        let h = header_with_default_style(0);
+        let mut s = Section::default();
+        s.paragraphs.push(plain_paragraph(99, 0, "orphan"));
+        let infos = build_run_type_infos(&h, &[s]);
+        assert_eq!(infos.len(), 1);
+        assert_eq!(infos[0].style_name, "");
     }
 }

@@ -209,6 +209,21 @@ pub const BULLET_CODE: u32 = 3303;
 /// Bullet shape not in the allow-list (`JID_BULLET_SHAPES = 3304`).
 pub const BULLET_SHAPES: u32 = 3304;
 
+/// Specific error codes within the [`ErrorCode::Style`] (3500) range.
+///
+/// These mirror the `JID_STYLE_*` constants in
+/// `references/dvc/Source/JsonModel.h`.
+pub mod style_codes {
+    /// `JID_STYLE_TYPE` (3501) — the style applied to a paragraph is not in
+    /// the spec's allowed-types list. Emitted when
+    /// `StyleSpec.allowed_types` is non-empty and the run's `style_name`
+    /// does not match any entry.
+    pub const STYLE_TYPE: u32 = 3501;
+    /// `JID_STYLE_PERMISSION` (3502) — run uses a non-default style but
+    /// the spec's catch-all `permission` gate is `false`.
+    pub const STYLE_PERMISSION: u32 = 3502;
+}
+
 /// Specific error codes within the [`ErrorCode::Hyperlink`] (6900) range.
 pub mod hyperlink_codes {
     /// A run is flagged as a hyperlink but the spec forbids hyperlinks.
