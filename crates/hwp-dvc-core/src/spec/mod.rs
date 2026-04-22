@@ -461,6 +461,104 @@ pub struct TableSpec {
     /// `table-in-table` (`JID_TABLE_TABLE_IN_TABLE`).
     #[serde(rename = "table-in-table", default)]
     pub table_in_table: Option<bool>,
+
+    // --- Per-cell detail-mode fields (JID_TABLE 3037..=3055) --------------
+    //
+    // The JSON keys mirror `references/dvc/sample/jsonFullSpec.json` (the
+    // hyphenated "bgfill-type" style). These are only consulted when the
+    // checker runs in detail mode (`--tabledetail` / `OutputScope::table_detail`).
+    /// `bgfill-type` (JID_TABLE_BGFILL_TYPE / 3037) — allowed fill kinds.
+    ///
+    /// Accepted values: `"none"`, `"color"`, `"gradation"`.
+    #[serde(rename = "bgfill-type", default)]
+    pub bgfill_type: Option<String>,
+    /// `bgfill-facecolor` (3038) — packed 24-bit RGB face color.
+    #[serde(rename = "bgfill-facecolor", default)]
+    pub bgfill_facecolor: Option<u32>,
+    /// `bgfill-pattoncolor` (3039) — packed 24-bit RGB pattern color.
+    #[serde(rename = "bgfill-pattoncolor", default)]
+    pub bgfill_pattoncolor: Option<u32>,
+    /// `bgfill-pattontype` (3040) — integer index into the HATCH_STYLE enum.
+    #[serde(rename = "bgfill-pattontype", default)]
+    pub bgfill_pattontype: Option<u32>,
+
+    /// `bggradation-startcolor` (3041).
+    #[serde(rename = "bggradation-startcolor", default)]
+    pub bggradation_startcolor: Option<u32>,
+    /// `bggradation-endcolor` (3042).
+    #[serde(rename = "bggradation-endcolor", default)]
+    pub bggradation_endcolor: Option<u32>,
+    /// `bggradation-type` (3043). Accepted: `"linear"`, `"radial"`,
+    /// `"square"`, `"conical"` (mirrors the reference C++ BGGradationType).
+    #[serde(rename = "bggradation-type", default)]
+    pub bggradation_type: Option<String>,
+    /// `bggradation-widthcenter` (3044).
+    #[serde(rename = "bggradation-widthcenter", default)]
+    pub bggradation_widthcenter: Option<u32>,
+    /// `bggradation-heightcenter` (3045).
+    #[serde(rename = "bggradation-heightcenter", default)]
+    pub bggradation_heightcenter: Option<u32>,
+    /// `bggradation-gradationangle` (3046).
+    #[serde(rename = "bggradation-gradationangle", default)]
+    pub bggradation_gradationangle: Option<u32>,
+    /// `bggradation-blurlevel` (3047).
+    #[serde(rename = "bggradation-blurlevel", default)]
+    pub bggradation_blurlevel: Option<u32>,
+    /// `bggradation-blurcenter` (3048).
+    #[serde(rename = "bggradation-blurcenter", default)]
+    pub bggradation_blurcenter: Option<u32>,
+
+    /// `picture-file` (3049). When `Some`, cells without a matching
+    /// picture reference emit the error.
+    #[serde(rename = "picture-file", default)]
+    pub picture_file: Option<String>,
+    /// `picture-include` (3050) — whether the picture file should be embedded.
+    #[serde(rename = "picture-include", default)]
+    pub picture_include: Option<bool>,
+    /// `picturefill-type` (3051). Accepted: `"tile"`, `"total"`, `"center"`,
+    /// `"zoom"` etc. (the PicFillType enum).
+    #[serde(rename = "picturefill-type", default)]
+    pub picturefill_type: Option<String>,
+    /// `picturefill-value` (3052).
+    #[serde(rename = "picturefill-value", default)]
+    pub picturefill_value: Option<i32>,
+
+    /// `effect-type` (3053). Accepted: `"none"`, `"gray"`, `"black"`, `"org"`.
+    #[serde(rename = "effect-type", default)]
+    pub effect_type: Option<String>,
+    /// `effect-value` (3054).
+    #[serde(rename = "effect-value", default)]
+    pub effect_value: Option<i32>,
+    /// `watermark` (3055).
+    #[serde(default)]
+    pub watermark: Option<u32>,
+}
+
+impl TableSpec {
+    /// Returns `true` when *no* cell-detail field is populated. The
+    /// detail-mode validator uses this to short-circuit cheaply when the
+    /// spec has no cell requirements.
+    pub(crate) fn has_cell_detail_fields(&self) -> bool {
+        self.bgfill_type.is_some()
+            || self.bgfill_facecolor.is_some()
+            || self.bgfill_pattoncolor.is_some()
+            || self.bgfill_pattontype.is_some()
+            || self.bggradation_startcolor.is_some()
+            || self.bggradation_endcolor.is_some()
+            || self.bggradation_type.is_some()
+            || self.bggradation_widthcenter.is_some()
+            || self.bggradation_heightcenter.is_some()
+            || self.bggradation_gradationangle.is_some()
+            || self.bggradation_blurlevel.is_some()
+            || self.bggradation_blurcenter.is_some()
+            || self.picture_file.is_some()
+            || self.picture_include.is_some()
+            || self.picturefill_type.is_some()
+            || self.picturefill_value.is_some()
+            || self.effect_type.is_some()
+            || self.effect_value.is_some()
+            || self.watermark.is_some()
+    }
 }
 
 /// A closed integer range `[min, max]` used by range-valued spec
@@ -608,5 +706,52 @@ mod tests {
         assert_eq!(cs.langtype.as_deref(), Some("대표"));
         assert_eq!(cs.font, vec!["바탕".to_string()]);
         assert_eq!(cs.ratio, Some(100));
+    }
+
+    #[test]
+    fn table_cell_detail_fields_parse() {
+        // Every cell-detail field, taken straight from the hyphenated
+        // keys in `jsonFullSpec.json`.
+        let s = r#"{
+            "table": {
+                "bgfill-type": "none",
+                "bgfill-facecolor": 16777215,
+                "bgfill-pattoncolor": 0,
+                "bgfill-pattontype": 0,
+                "bggradation-startcolor": 0,
+                "bggradation-endcolor": 255,
+                "bggradation-type": "linear",
+                "bggradation-widthcenter": 50,
+                "bggradation-heightcenter": 50,
+                "bggradation-gradationangle": 90,
+                "bggradation-blurlevel": 0,
+                "bggradation-blurcenter": 50,
+                "picture-file": "embed.png",
+                "picture-include": true,
+                "picturefill-type": "zoom",
+                "picturefill-value": 0,
+                "effect-type": "none",
+                "effect-value": 0,
+                "watermark": 0
+            }
+        }"#;
+        let spec = DvcSpec::from_json_str(s).unwrap();
+        let t = spec.table.unwrap();
+        assert!(t.has_cell_detail_fields());
+        assert_eq!(t.bgfill_type.as_deref(), Some("none"));
+        assert_eq!(t.bgfill_facecolor, Some(16777215));
+        assert_eq!(t.bggradation_type.as_deref(), Some("linear"));
+        assert_eq!(t.picture_file.as_deref(), Some("embed.png"));
+        assert_eq!(t.picture_include, Some(true));
+        assert_eq!(t.effect_type.as_deref(), Some("none"));
+        assert_eq!(t.watermark, Some(0));
+    }
+
+    #[test]
+    fn table_spec_without_cell_detail_fields_has_no_cell_detail() {
+        let s = r#"{ "table": { "treatAsChar": true } }"#;
+        let spec = DvcSpec::from_json_str(s).unwrap();
+        let t = spec.table.unwrap();
+        assert!(!t.has_cell_detail_fields());
     }
 }

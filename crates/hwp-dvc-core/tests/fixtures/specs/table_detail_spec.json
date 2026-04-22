@@ -1,0 +1,14 @@
+{
+    "table": {
+        "border": [
+            { "position": 1, "bordertype": 1, "size": 0.12, "color": 0 },
+            { "position": 2, "bordertype": 1, "size": 0.12, "color": 0 },
+            { "position": 3, "bordertype": 1, "size": 0.12, "color": 0 },
+            { "position": 4, "bordertype": 1, "size": 0.12, "color": 0 }
+        ],
+        "table-in-table": false,
+
+        "bgfill-type": "color",
+        "bgfill-facecolor": 16777215
+    }
+}

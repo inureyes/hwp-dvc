@@ -109,6 +109,62 @@ pub const TABLE_BORDER_CELL_SPACING: u32 = 3036;
 /// JID_TABLE_TABLE_IN_TABLE — nested table where policy forbids it.
 pub const TABLE_IN_TABLE: u32 = 3056;
 
+/// Per-cell ("detail") table error codes emitted only when
+/// `--tabledetail` / [`crate::checker::OutputScope::table_detail`] is set.
+///
+/// These mirror the `JID_TABLE_{BGFILL,BGGRADATION,PICTURE,PICTUREFILL,EFFECT,WATERMARK}_*`
+/// constants in `references/dvc/Source/JsonModel.h` (category 3000, subrange 3037–3055).
+/// The reference C++ leaves each of these as empty `case` stubs in
+/// `Checker::CheckTableToCheckList`; the Rust port populates them for
+/// the detail-mode pass.
+pub mod table_detail_codes {
+    /// `JID_TABLE_BGFILL_TYPE` (3037) — cell background-fill type mismatch
+    /// (`none` / `color` / `gradation`).
+    pub const TABLE_BGFILL_TYPE: u32 = 3037;
+    /// `JID_TABLE_BGFILL_FACECOLOR` (3038) — solid-fill face color mismatch.
+    pub const TABLE_BGFILL_FACECOLOR: u32 = 3038;
+    /// `JID_TABLE_BGFILL_PATTONCOLOR` (3039) — pattern-fill pattern color mismatch.
+    pub const TABLE_BGFILL_PATTONCOLOR: u32 = 3039;
+    /// `JID_TABLE_BGFILL_PATTONTYPE` (3040) — pattern-fill hatch type mismatch.
+    pub const TABLE_BGFILL_PATTONTYPE: u32 = 3040;
+
+    /// `JID_TABLE_BGGRADATION_STARTCOLOR` (3041) — gradient start color mismatch.
+    pub const TABLE_BGGRADATION_STARTCOLOR: u32 = 3041;
+    /// `JID_TABLE_BGGRADATION_ENDCOLOR` (3042) — gradient end color mismatch.
+    pub const TABLE_BGGRADATION_ENDCOLOR: u32 = 3042;
+    /// `JID_TABLE_BGGRADATION_TYPE` (3043) — gradient type mismatch
+    /// (`linear` / `radial` / `square` / `conical`).
+    pub const TABLE_BGGRADATION_TYPE: u32 = 3043;
+    /// `JID_TABLE_BGGRADATION_WIDTHCENTER` (3044) — gradient width-center mismatch.
+    pub const TABLE_BGGRADATION_WIDTHCENTER: u32 = 3044;
+    /// `JID_TABLE_BGGRADATION_HEIGHTCENTER` (3045) — gradient height-center mismatch.
+    pub const TABLE_BGGRADATION_HEIGHTCENTER: u32 = 3045;
+    /// `JID_TABLE_BGGRADATION_GRADATIONANGLE` (3046) — gradient angle mismatch.
+    pub const TABLE_BGGRADATION_GRADATIONANGLE: u32 = 3046;
+    /// `JID_TABLE_BGGRADATION_BLURLEVEL` (3047) — gradient blur level mismatch.
+    pub const TABLE_BGGRADATION_BLURLEVEL: u32 = 3047;
+    /// `JID_TABLE_BGGRADATION_BLURCENTER` (3048) — gradient blur center mismatch.
+    pub const TABLE_BGGRADATION_BLURCENTER: u32 = 3048;
+
+    /// `JID_TABLE_PICTURE_FILE` (3049) — picture-fill file reference mismatch.
+    pub const TABLE_PICTURE_FILE: u32 = 3049;
+    /// `JID_TABLE_PICTURE_INCLUDE` (3050) — picture-fill `include` flag mismatch.
+    pub const TABLE_PICTURE_INCLUDE: u32 = 3050;
+    /// `JID_TABLE_PICTUREFILL_TYPE` (3051) — picture-fill arrangement type mismatch.
+    pub const TABLE_PICTUREFILL_TYPE: u32 = 3051;
+    /// `JID_TABLE_PICTUREFILL_VALUE` (3052) — picture-fill numeric value mismatch.
+    pub const TABLE_PICTUREFILL_VALUE: u32 = 3052;
+
+    /// `JID_TABLE_EFFECT_TYPE` (3053) — picture-effect type mismatch
+    /// (`none` / `gray` / `black` / `org`).
+    pub const TABLE_EFFECT_TYPE: u32 = 3053;
+    /// `JID_TABLE_EFFECT_VALUE` (3054) — picture-effect numeric value mismatch.
+    pub const TABLE_EFFECT_VALUE: u32 = 3054;
+
+    /// `JID_TABLE_WATERMARK` (3055) — watermark setting mismatch.
+    pub const TABLE_WATERMARK: u32 = 3055;
+}
+
 /// Error code ranges mirror the reference C++ implementation
 /// (see `references/dvc/Source/JsonModel.h`).
 ///
