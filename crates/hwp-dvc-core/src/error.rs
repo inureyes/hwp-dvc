@@ -354,6 +354,19 @@ pub const CHARSHAPE_BG_PATTONTYPE: u32 = 1039;
 pub mod outline_shape_codes {
     /// `JID_OUTLINESHAPE_TYPE` (3201) — outline shape type mismatch.
     pub const OUTLINESHAPE_TYPE: u32 = 3201;
+    /// `JID_OUTLINESHAPE_STARTNUMBER` (3202) — start number mismatch on the
+    /// top-level `<hh:numbering start="…"/>` element.
+    pub const OUTLINESHAPE_STARTNUMBER: u32 = 3202;
+    /// `JID_OUTLINESHAPE_VALUE` (3203) — per-level start value mismatch
+    /// (`<hh:paraHead start="…"/>` at the checked level).
+    pub const OUTLINESHAPE_VALUE: u32 = 3203;
+    /// `JID_OUTLINESHAPE_LEVELTYPE` (3204) — the `leveltype` wrapper
+    /// constraint is violated: the spec defines more levels than the document
+    /// declares, or vice-versa (level-count mismatch).
+    pub const OUTLINESHAPE_LEVELTYPE: u32 = 3204;
+    /// `JID_OUTLINESHAPE_LEVELTYPE_LEVEL` (3205) — a `level` field within a
+    /// `leveltype` entry does not match the expected level index.
+    pub const OUTLINESHAPE_LEVELTYPE_LEVEL: u32 = 3205;
     /// `JID_OUTLINESHAPE_LEVELTYPE_NUMBERTYPE` (3206) — level numbertype template mismatch.
     pub const OUTLINESHAPE_LEVEL_NUMBERTYPE: u32 = 3206;
     /// `JID_OUTLINESHAPE_LEVELTYPE_NUMBERSHAPE` (3207) — level numbershape enum mismatch.

@@ -8,19 +8,32 @@
 //! (i.e. its [`ParaShape::heading_type`] is [`HeadingType::Outline`]), look
 //! up the corresponding [`Numbering`] entry (via
 //! `ParaShape::heading_id_ref`) and the specific level (`heading_level`).
-//! From the [`ParaHead`] at that level, compare:
 //!
-//! - `num_format`      → `LevelType::numbershape` (via ordinal mapping)
-//! - `num_format_text` → `LevelType::numbertype` (template string, when present)
+//! ## Top-level numbering checks
+//!
+//! - `start_number` → `Numbering::start` fires `OUTLINESHAPE_STARTNUMBER` (3202)
+//! - `value`        → `ParaHead::start` (per-level) fires `OUTLINESHAPE_VALUE` (3203)
+//! - level count    → `leveltype` length vs document levels fires `OUTLINESHAPE_LEVELTYPE` (3204)
+//! - level index    → `LevelType::level` vs `ParaHead::level` fires `OUTLINESHAPE_LEVELTYPE_LEVEL` (3205)
+//!
+//! ## Per-level checks (from the original implementation)
+//!
+//! - `num_format`      → `LevelType::numbershape` (via ordinal mapping) fires `OUTLINESHAPE_LEVEL_NUMBERSHAPE` (3207)
+//! - `num_format_text` → `LevelType::numbertype` (template string, when present) fires `OUTLINESHAPE_LEVEL_NUMBERTYPE` (3206)
 //!
 //! One [`DvcErrorInfo`] is emitted per (run, mismatched field) pair.
 //!
-//! # Error codes
+//! # Error codes (complete 3200-range)
 //!
-//! | Mismatch              | Code                          |
-//! |-----------------------|-------------------------------|
-//! | `numbertype` template | `OUTLINESHAPE_LEVEL_NUMBERTYPE` (3206) |
-//! | `numbershape` enum    | `OUTLINESHAPE_LEVEL_NUMBERSHAPE` (3207) |
+//! | Mismatch                   | Code                            |
+//! |----------------------------|---------------------------------|
+//! | shape type name            | `OUTLINESHAPE_TYPE` (3201)      |
+//! | start number               | `OUTLINESHAPE_STARTNUMBER` (3202)|
+//! | per-level start value      | `OUTLINESHAPE_VALUE` (3203)     |
+//! | level-count wrapper        | `OUTLINESHAPE_LEVELTYPE` (3204) |
+//! | level index within wrapper | `OUTLINESHAPE_LEVELTYPE_LEVEL` (3205)|
+//! | `numbertype` template      | `OUTLINESHAPE_LEVEL_NUMBERTYPE` (3206)|
+//! | `numbershape` enum         | `OUTLINESHAPE_LEVEL_NUMBERSHAPE` (3207)|
 //!
 //! `OUTLINESHAPE_TYPE` (3201) is reserved for a higher-level shape-name
 //! check (matching the named outline shape template, e.g. "OUTLINE_NAME1")
@@ -53,9 +66,13 @@ use std::collections::HashSet;
 
 use crate::checker::DvcErrorInfo;
 use crate::document::header::types::enums::HeadingType;
+use crate::document::header::Numbering;
 use crate::document::{Document, RunTypeInfo};
 use crate::error::{
-    outline_shape_codes::{OUTLINESHAPE_LEVEL_NUMBERSHAPE, OUTLINESHAPE_LEVEL_NUMBERTYPE},
+    outline_shape_codes::{
+        OUTLINESHAPE_LEVELTYPE, OUTLINESHAPE_LEVELTYPE_LEVEL, OUTLINESHAPE_LEVEL_NUMBERSHAPE,
+        OUTLINESHAPE_LEVEL_NUMBERTYPE, OUTLINESHAPE_STARTNUMBER, OUTLINESHAPE_VALUE,
+    },
     ErrorContext,
 };
 use crate::spec::OutlineShapeSpec;
@@ -68,12 +85,14 @@ use crate::spec::OutlineShapeSpec;
 /// `document` against `spec`.
 ///
 /// Returns an empty `Vec` when:
-/// - the spec has no `leveltype` entries, or
+/// - the spec has no constraints (no `leveltype`, no `start_number`, no `value`), or
 /// - no paragraph uses outline numbering, or
 /// - all outline paragraphs match the spec.
 #[must_use]
 pub fn check(document: &Document, spec: &OutlineShapeSpec) -> Vec<DvcErrorInfo> {
-    if spec.leveltype.is_empty() {
+    let spec_is_empty =
+        spec.leveltype.is_empty() && spec.start_number.is_none() && spec.value.is_none();
+    if spec_is_empty {
         return Vec::new();
     }
 
@@ -93,6 +112,12 @@ pub fn check(document: &Document, spec: &OutlineShapeSpec) -> Vec<DvcErrorInfo> 
     }
 
     let mut errors: Vec<DvcErrorInfo> = Vec::new();
+
+    // Track which numbering IDs have already been checked for top-level
+    // constraints (start_number, value, leveltype wrapper) so we do not
+    // emit the same error multiple times for different outline paragraphs
+    // that share the same numbering template.
+    let mut checked_numbering_ids: HashSet<u32> = HashSet::new();
 
     for run in repr {
         let para_shape = match header.para_shapes.get(&run.para_pr_id_ref) {
@@ -115,6 +140,11 @@ pub fn check(document: &Document, spec: &OutlineShapeSpec) -> Vec<DvcErrorInfo> 
             None => continue,
         };
 
+        // --- Top-level numbering checks (once per unique numbering template) ---
+        if checked_numbering_ids.insert(numbering.id) {
+            check_numbering_top_level(run, numbering, spec, &mut errors);
+        }
+
         // OWPML `<hh:heading level="N"/>` is 0-indexed; `<hh:paraHead level="N"/>`
         // is 1-indexed. Add 1 to look up the right ParaHead.
         let para_level = para_shape.heading_level + 1; // 1-indexed level
@@ -128,6 +158,15 @@ pub fn check(document: &Document, spec: &OutlineShapeSpec) -> Vec<DvcErrorInfo> 
             Some(lt) => lt,
             None => continue,
         };
+
+        // --- value (per-level start value) ---
+        // When `spec.value` is set, validate every `ParaHead::start` against it.
+        // Fires OUTLINESHAPE_VALUE (3203).
+        if let Some(expected_value) = spec.value {
+            if para_head.start != expected_value {
+                errors.push(make_error(run, OUTLINESHAPE_VALUE));
+            }
+        }
 
         // --- numbertype (template string) ---
         // Only checked when the spec supplies a `numbertype` value.
@@ -145,6 +184,57 @@ pub fn check(document: &Document, spec: &OutlineShapeSpec) -> Vec<DvcErrorInfo> 
     }
 
     errors
+}
+
+// ---------------------------------------------------------------------------
+// Top-level numbering checks (start_number, leveltype count)
+// ---------------------------------------------------------------------------
+
+/// Check the top-level [`Numbering`] constraints that are validated once
+/// per unique numbering template (not per run).
+///
+/// - `start_number`: `Numbering::start` vs `spec.start_number` → `OUTLINESHAPE_STARTNUMBER` (3202)
+/// - `leveltype` count: `spec.leveltype.len()` vs `numbering.para_heads.len()` → `OUTLINESHAPE_LEVELTYPE` (3204)
+/// - level index: each `spec.leveltype[i].level` vs sequential expected `i+1` → `OUTLINESHAPE_LEVELTYPE_LEVEL` (3205)
+fn check_numbering_top_level(
+    run: &RunTypeInfo,
+    numbering: &Numbering,
+    spec: &OutlineShapeSpec,
+    errors: &mut Vec<DvcErrorInfo>,
+) {
+    // --- start_number (3202) ---
+    // Compare the top-level `<hh:numbering start="…"/>` attribute against
+    // the spec's expected start number.
+    if let Some(expected_start) = spec.start_number {
+        if numbering.start != expected_start {
+            errors.push(make_error(run, OUTLINESHAPE_STARTNUMBER));
+        }
+    }
+
+    // --- leveltype wrapper (3204) ---
+    // When the spec defines leveltype entries, the document's numbering
+    // template must declare the same number of levels (para_heads).
+    // A count mismatch means the document is missing required levels or
+    // has surplus levels.
+    if !spec.leveltype.is_empty() && spec.leveltype.len() != numbering.para_heads.len() {
+        errors.push(make_error(run, OUTLINESHAPE_LEVELTYPE));
+    }
+
+    // --- leveltype level index (3205) ---
+    // Each spec `leveltype` entry carries a `level` field that must be a
+    // 1-indexed sequential integer matching its position in the array.
+    // Spec entry at index 0 → expected level 1, index 1 → level 2, etc.
+    // A mismatch means the spec (or the document it encodes) has a
+    // non-sequential level declaration.
+    for (idx, lt) in spec.leveltype.iter().enumerate() {
+        let expected_level = (idx as u32) + 1;
+        if lt.level != expected_level {
+            errors.push(make_error(run, OUTLINESHAPE_LEVELTYPE_LEVEL));
+            // One error per numbering template is sufficient; break after
+            // the first out-of-sequence entry to avoid flooding.
+            break;
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -235,7 +325,8 @@ mod tests {
     use crate::document::header::HeaderTables;
     use crate::document::{Document, RunTypeInfo};
     use crate::error::outline_shape_codes::{
-        OUTLINESHAPE_LEVEL_NUMBERSHAPE, OUTLINESHAPE_LEVEL_NUMBERTYPE,
+        OUTLINESHAPE_LEVELTYPE, OUTLINESHAPE_LEVELTYPE_LEVEL, OUTLINESHAPE_LEVEL_NUMBERSHAPE,
+        OUTLINESHAPE_LEVEL_NUMBERTYPE, OUTLINESHAPE_STARTNUMBER, OUTLINESHAPE_VALUE,
     };
     use crate::spec::{LevelType, OutlineShapeSpec};
 
@@ -281,13 +372,34 @@ mod tests {
     }
 
     /// Build a one-level [`Numbering`] with the given `num_format` and
-    /// `num_format_text` at level 1.
+    /// `num_format_text` at level 1.  `start` defaults to 0.
     fn one_level_numbering(id: u32, num_format: &str, num_format_text: &str) -> Numbering {
         Numbering {
             id,
             start: 0,
             para_heads: vec![ParaHead {
                 level: 1,
+                num_format: num_format.into(),
+                num_format_text: num_format_text.into(),
+                ..Default::default()
+            }],
+        }
+    }
+
+    /// Build a one-level [`Numbering`] with an explicit top-level `start` value.
+    fn one_level_numbering_with_start(
+        id: u32,
+        numbering_start: u32,
+        num_format: &str,
+        num_format_text: &str,
+        para_head_start: u32,
+    ) -> Numbering {
+        Numbering {
+            id,
+            start: numbering_start,
+            para_heads: vec![ParaHead {
+                level: 1,
+                start: para_head_start,
                 num_format: num_format.into(),
                 num_format_text: num_format_text.into(),
                 ..Default::default()
@@ -303,6 +415,7 @@ mod tests {
                 numbertype: numbertype.map(str::to_string),
                 numbershape,
             }],
+            ..Default::default()
         }
     }
 
@@ -367,12 +480,12 @@ mod tests {
         );
     }
 
-    /// An empty `leveltype` in the spec means the check is a no-op.
+    /// A fully empty spec (no leveltype, no start_number, no value) is a no-op.
     #[test]
     fn empty_spec_produces_no_errors() {
         let num = one_level_numbering(1, "HANGUL_SYLLABLE", "^2.");
         let doc = doc_with_outline_para(0, 1, 1, num);
-        let spec = OutlineShapeSpec { leveltype: vec![] };
+        let spec = OutlineShapeSpec::default();
         let errors = check(&doc, &spec);
         assert!(errors.is_empty(), "empty spec must produce no errors");
     }
@@ -469,6 +582,203 @@ mod tests {
             shape_errors.len(),
             1,
             "three runs with the same para_pr_id_ref must produce exactly one NUMBERSHAPE error"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // New sub-code tests: STARTNUMBER (3202), VALUE (3203),
+    //                     LEVELTYPE (3204), LEVELTYPE_LEVEL (3205)
+    // -----------------------------------------------------------------------
+
+    /// `start_number` mismatch fires `OUTLINESHAPE_STARTNUMBER` (3202).
+    ///
+    /// The spec declares `start_number: 1` but the document's `<hh:numbering
+    /// start="0"/>` has start=0.
+    #[test]
+    fn start_number_mismatch_fires_error() {
+        // numbering_start=0, para_head_start=0, format="DIGIT"
+        let num = one_level_numbering_with_start(1, 0, "DIGIT", "^1.", 0);
+        let doc = doc_with_outline_para(0, 1, 0, num);
+        let spec = OutlineShapeSpec {
+            start_number: Some(1), // document has 0, expects 1
+            leveltype: vec![LevelType {
+                level: 1,
+                numbertype: None,
+                numbershape: 0, // DIGIT
+            }],
+            ..Default::default()
+        };
+        let errors = check(&doc, &spec);
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.error_code == OUTLINESHAPE_STARTNUMBER),
+            "start_number mismatch must fire OUTLINESHAPE_STARTNUMBER (3202); got {errors:?}"
+        );
+    }
+
+    /// When `start_number` matches, no `OUTLINESHAPE_STARTNUMBER` error.
+    #[test]
+    fn matching_start_number_produces_no_error() {
+        let num = one_level_numbering_with_start(1, 1, "DIGIT", "^1.", 1);
+        let doc = doc_with_outline_para(0, 1, 0, num);
+        let spec = OutlineShapeSpec {
+            start_number: Some(1), // matches
+            leveltype: vec![LevelType {
+                level: 1,
+                numbertype: None,
+                numbershape: 0, // DIGIT
+            }],
+            ..Default::default()
+        };
+        let errors = check(&doc, &spec);
+        let start_errors: Vec<_> = errors
+            .iter()
+            .filter(|e| e.error_code == OUTLINESHAPE_STARTNUMBER)
+            .collect();
+        assert!(
+            start_errors.is_empty(),
+            "matching start_number must not produce STARTNUMBER errors; got {errors:?}"
+        );
+    }
+
+    /// `value` mismatch fires `OUTLINESHAPE_VALUE` (3203).
+    ///
+    /// The spec declares `value: 1` (expected per-level start) but the
+    /// document's `<hh:paraHead start="0"/>` has start=0.
+    #[test]
+    fn value_mismatch_fires_error() {
+        // para_head_start=0, but spec expects value=1
+        let num = one_level_numbering_with_start(1, 0, "DIGIT", "^1.", 0);
+        let doc = doc_with_outline_para(0, 1, 0, num);
+        let spec = OutlineShapeSpec {
+            value: Some(1), // expects per-level start=1; document has 0
+            leveltype: vec![LevelType {
+                level: 1,
+                numbertype: None,
+                numbershape: 0,
+            }],
+            ..Default::default()
+        };
+        let errors = check(&doc, &spec);
+        assert!(
+            errors.iter().any(|e| e.error_code == OUTLINESHAPE_VALUE),
+            "value mismatch must fire OUTLINESHAPE_VALUE (3203); got {errors:?}"
+        );
+    }
+
+    /// When `value` matches, no `OUTLINESHAPE_VALUE` error.
+    #[test]
+    fn matching_value_produces_no_error() {
+        let num = one_level_numbering_with_start(1, 0, "DIGIT", "^1.", 1);
+        let doc = doc_with_outline_para(0, 1, 0, num);
+        let spec = OutlineShapeSpec {
+            value: Some(1), // matches para_head_start=1
+            leveltype: vec![LevelType {
+                level: 1,
+                numbertype: None,
+                numbershape: 0,
+            }],
+            ..Default::default()
+        };
+        let errors = check(&doc, &spec);
+        let val_errors: Vec<_> = errors
+            .iter()
+            .filter(|e| e.error_code == OUTLINESHAPE_VALUE)
+            .collect();
+        assert!(
+            val_errors.is_empty(),
+            "matching value must not produce VALUE errors; got {errors:?}"
+        );
+    }
+
+    /// Level-count mismatch fires `OUTLINESHAPE_LEVELTYPE` (3204).
+    ///
+    /// The spec has 2 leveltype entries but the document only declares 1
+    /// `<hh:paraHead>` level — the level-count wrapper is violated.
+    #[test]
+    fn level_count_mismatch_fires_leveltype_error() {
+        // Document: only 1 level (level 1).
+        let num = one_level_numbering(1, "DIGIT", "^1.");
+        let doc = doc_with_outline_para(0, 1, 0, num);
+        // Spec: 2 levels — document has only 1.
+        let spec = OutlineShapeSpec {
+            leveltype: vec![
+                LevelType {
+                    level: 1,
+                    numbertype: None,
+                    numbershape: 0,
+                },
+                LevelType {
+                    level: 2,
+                    numbertype: None,
+                    numbershape: 0,
+                },
+            ],
+            ..Default::default()
+        };
+        let errors = check(&doc, &spec);
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.error_code == OUTLINESHAPE_LEVELTYPE),
+            "level count mismatch must fire OUTLINESHAPE_LEVELTYPE (3204); got {errors:?}"
+        );
+    }
+
+    /// `level` index within a `leveltype` entry that is not sequential fires
+    /// `OUTLINESHAPE_LEVELTYPE_LEVEL` (3205).
+    ///
+    /// The spec's `leveltype` array must have entries with `level` values that
+    /// are sequential 1-indexed integers (entry 0 → level 1, entry 1 → level 2,
+    /// …). If an entry's `level` field skips or repeats an index, 3205 fires.
+    ///
+    /// **Synthetic fail case**: spec declares two entries with levels `[1, 3]`
+    /// (gap at 2 — entry index 1 should be level 2 but is level 3).
+    #[test]
+    fn level_index_mismatch_fires_leveltype_level_error() {
+        // Two-level numbering (para_heads at levels 1 and 3).
+        let num = Numbering {
+            id: 1,
+            start: 0,
+            para_heads: vec![
+                ParaHead {
+                    level: 1,
+                    num_format: "DIGIT".into(),
+                    num_format_text: "^1.".into(),
+                    ..Default::default()
+                },
+                ParaHead {
+                    level: 3, // note: level 2 is skipped
+                    num_format: "DIGIT".into(),
+                    num_format_text: "^2.".into(),
+                    ..Default::default()
+                },
+            ],
+        };
+        let doc = doc_with_outline_para(0, 1, 0, num); // heading_level=0 → para_level=1
+                                                       // Spec leveltype entries at index 0 → level=1 (ok) and index 1 → level=3 (bad; expected 2).
+        let spec = OutlineShapeSpec {
+            leveltype: vec![
+                LevelType {
+                    level: 1,
+                    numbertype: None,
+                    numbershape: 0,
+                },
+                LevelType {
+                    level: 3,
+                    numbertype: None,
+                    numbershape: 0,
+                }, // wrong: expected level=2
+            ],
+            ..Default::default()
+        };
+        let errors = check(&doc, &spec);
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.error_code == OUTLINESHAPE_LEVELTYPE_LEVEL),
+            "non-sequential level index must fire OUTLINESHAPE_LEVELTYPE_LEVEL (3205); got {errors:?}"
         );
     }
 
