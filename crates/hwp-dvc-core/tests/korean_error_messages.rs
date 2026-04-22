@@ -75,10 +75,7 @@ fn charshape_fail_font_error_string_contains_font_word() {
     let spec = load_spec();
     let errors = run_checker(&doc, &spec);
 
-    let font_errors: Vec<_> = errors
-        .iter()
-        .filter(|e| e.error_code == 1004)
-        .collect();
+    let font_errors: Vec<_> = errors.iter().filter(|e| e.error_code == 1004).collect();
 
     assert!(
         !font_errors.is_empty(),
@@ -119,10 +116,7 @@ fn macro_present_error_string_contains_macro_word() {
 
     let errors = run_checker(&doc, &spec);
 
-    let macro_errors: Vec<_> = errors
-        .iter()
-        .filter(|e| e.error_code == 7001)
-        .collect();
+    let macro_errors: Vec<_> = errors.iter().filter(|e| e.error_code == 7001).collect();
 
     assert!(
         !macro_errors.is_empty(),
@@ -152,16 +146,16 @@ fn hyperlink_external_error_string_contains_hyperlink_word() {
     let spec = load_spec();
     // fixture_spec.json has hyperlink.permission = false
     assert!(
-        spec.hyperlink.as_ref().map(|h| !h.permission).unwrap_or(false),
+        spec.hyperlink
+            .as_ref()
+            .map(|h| !h.permission)
+            .unwrap_or(false),
         "fixture_spec must have hyperlink.permission == false for this test to be meaningful"
     );
 
     let errors = run_checker(&doc, &spec);
 
-    let hyperlink_errors: Vec<_> = errors
-        .iter()
-        .filter(|e| e.error_code == 6901)
-        .collect();
+    let hyperlink_errors: Vec<_> = errors.iter().filter(|e| e.error_code == 6901).collect();
 
     assert!(
         !hyperlink_errors.is_empty(),

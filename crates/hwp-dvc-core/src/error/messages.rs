@@ -55,10 +55,45 @@ impl<'a> ErrorContext<'a> {
 /// separately in [`error_string`].
 const STATIC_MESSAGES_KO: &[(u32, &str)] = &[
     // ── CharShape (1000-range) ────────────────────────────────────────────
+    (1001, "글자 크기가 허용된 범위를 벗어났습니다"),
+    (1002, "언어 세트가 허용되지 않습니다"),
     (1003, "언어 종류가 허용되지 않습니다"),
     // 1004 is dynamic — see error_string()
+    (1005, "글자 상대 크기가 허용된 범위를 벗어났습니다"),
+    (1006, "글자 위치가 허용된 범위를 벗어났습니다"),
     (1007, "글자 장평 값이 허용된 범위를 벗어났습니다"),
     (1008, "글자 자간 값이 허용된 범위를 벗어났습니다"),
+    (1009, "굵게 속성이 허용되지 않습니다"),
+    (1010, "기울임꼴 속성이 허용되지 않습니다"),
+    (1011, "밑줄 속성이 허용되지 않습니다"),
+    (1012, "취소선 속성이 허용되지 않습니다"),
+    (1013, "외곽선 속성이 허용되지 않습니다"),
+    (1014, "양각 속성이 허용되지 않습니다"),
+    (1015, "음각 속성이 허용되지 않습니다"),
+    (1016, "그림자 속성이 허용되지 않습니다"),
+    (1017, "위첨자 속성이 허용되지 않습니다"),
+    (1018, "아래첨자 속성이 허용되지 않습니다"),
+    (1019, "그림자 종류가 허용되지 않습니다"),
+    (1020, "그림자 X 방향 오프셋이 허용된 범위를 벗어났습니다"),
+    (1021, "그림자 Y 방향 오프셋이 허용된 범위를 벗어났습니다"),
+    (1022, "그림자 색상이 허용되지 않습니다"),
+    (1023, "밑줄 위치가 허용되지 않습니다"),
+    (1024, "밑줄 모양이 허용되지 않습니다"),
+    (1025, "밑줄 색상이 허용되지 않습니다"),
+    (1026, "취소선 모양이 허용되지 않습니다"),
+    (1027, "취소선 색상이 허용되지 않습니다"),
+    (1028, "외곽선 종류가 허용되지 않습니다"),
+    (1029, "빈 칸 사용 속성이 허용되지 않습니다"),
+    (1030, "글자 크기(포인트)가 허용된 범위를 벗어났습니다"),
+    (1031, "커닝 속성이 허용되지 않습니다"),
+    (1032, "글자 배경 테두리가 허용되지 않습니다"),
+    (1033, "글자 배경 테두리 위치가 허용되지 않습니다"),
+    (1034, "글자 배경 테두리 종류가 허용되지 않습니다"),
+    (1035, "글자 배경 테두리 굵기가 허용되지 않습니다"),
+    (1036, "글자 배경 테두리 색상이 허용되지 않습니다"),
+    (1037, "글자 배경 색상이 허용되지 않습니다"),
+    (1038, "글자 배경 패턴 색상이 허용되지 않습니다"),
+    (1039, "글자 배경 패턴 종류가 허용되지 않습니다"),
     // ── ParaShape (2000-range) ────────────────────────────────────────────
     (2004, "첫째 줄 들여쓰기 값이 허용된 범위를 벗어났습니다"),
     (2005, "들여쓰기 값이 허용된 범위를 벗어났습니다"),
@@ -98,10 +133,45 @@ const STATIC_MESSAGES_KO: &[(u32, &str)] = &[
 
 /// Static English message table (used when `HWP_DVC_LANG=en`).
 const STATIC_MESSAGES_EN: &[(u32, &str)] = &[
+    (1001, "font size is out of the allowed range"),
+    (1002, "language set is not allowed"),
     (1003, "language type is not allowed"),
     // 1004 is dynamic
+    (1005, "relative character size is out of the allowed range"),
+    (1006, "character position is out of the allowed range"),
     (1007, "character ratio is out of the allowed range"),
     (1008, "character spacing is out of the allowed range"),
+    (1009, "bold attribute is not allowed"),
+    (1010, "italic attribute is not allowed"),
+    (1011, "underline attribute is not allowed"),
+    (1012, "strikeout attribute is not allowed"),
+    (1013, "outline attribute is not allowed"),
+    (1014, "emboss attribute is not allowed"),
+    (1015, "engrave attribute is not allowed"),
+    (1016, "shadow attribute is not allowed"),
+    (1017, "superscript attribute is not allowed"),
+    (1018, "subscript attribute is not allowed"),
+    (1019, "shadow type is not allowed"),
+    (1020, "shadow X offset is out of the allowed range"),
+    (1021, "shadow Y offset is out of the allowed range"),
+    (1022, "shadow color is not allowed"),
+    (1023, "underline position is not allowed"),
+    (1024, "underline shape is not allowed"),
+    (1025, "underline color is not allowed"),
+    (1026, "strikeout shape is not allowed"),
+    (1027, "strikeout color is not allowed"),
+    (1028, "outline type is not allowed"),
+    (1029, "empty-space attribute is not allowed"),
+    (1030, "font size in points is out of the allowed range"),
+    (1031, "kerning attribute is not allowed"),
+    (1032, "character background border is not allowed"),
+    (1033, "character background border position is not allowed"),
+    (1034, "character background border type is not allowed"),
+    (1035, "character background border size is not allowed"),
+    (1036, "character background border color is not allowed"),
+    (1037, "character background color is not allowed"),
+    (1038, "character background pattern color is not allowed"),
+    (1039, "character background pattern type is not allowed"),
     (2004, "first-line indent is out of the allowed range"),
     (2005, "paragraph indent is out of the allowed range"),
     (2006, "paragraph outdent is out of the allowed range"),
@@ -114,8 +184,14 @@ const STATIC_MESSAGES_EN: &[(u32, &str)] = &[
     (3034, "table border line width is not allowed"),
     (3035, "table border color is not allowed"),
     (3056, "table inside table is not allowed"),
-    (3101, "text contains a special character below the allowed minimum"),
-    (3102, "text contains a special character above the allowed maximum"),
+    (
+        3101,
+        "text contains a special character below the allowed minimum",
+    ),
+    (
+        3102,
+        "text contains a special character above the allowed maximum",
+    ),
     (3201, "outline shape type is not allowed"),
     (3206, "outline level number format is not allowed"),
     (3207, "outline level number shape is not allowed"),
@@ -226,7 +302,10 @@ mod tests {
     #[test]
     fn charshape_font_without_name_contains_glyph_word() {
         let msg = error_string(1004, ctx());
-        assert!(msg.contains("글꼴"), "1004 without name must mention 글꼴: {msg}");
+        assert!(
+            msg.contains("글꼴"),
+            "1004 without name must mention 글꼴: {msg}"
+        );
     }
 
     #[test]
@@ -270,7 +349,10 @@ mod tests {
     #[test]
     fn bullet_shapes_without_char_contains_bullet_word() {
         let msg = error_string(3304, ctx());
-        assert!(msg.contains("글머리표"), "3304 without char must mention 글머리표: {msg}");
+        assert!(
+            msg.contains("글머리표"),
+            "3304 without char must mention 글머리표: {msg}"
+        );
     }
 
     #[test]
@@ -280,7 +362,10 @@ mod tests {
             ..Default::default()
         };
         let msg = error_string(3304, ctx);
-        assert!(msg.contains("□"), "3304 with char must include the char: {msg}");
+        assert!(
+            msg.contains("□"),
+            "3304 with char must include the char: {msg}"
+        );
         assert!(msg.contains("글머리표"), "must mention 글머리표: {msg}");
     }
 
@@ -308,15 +393,29 @@ mod tests {
     #[test]
     fn unknown_code_returns_empty_string() {
         let msg = error_string(9999, ctx());
-        assert!(msg.is_empty(), "unknown code must return empty string: {msg}");
+        assert!(
+            msg.is_empty(),
+            "unknown code must return empty string: {msg}"
+        );
     }
 
     #[test]
     fn all_documented_codes_have_non_empty_messages() {
         let codes: &[u32] = &[
-            1003, 1004, 1007, 1008, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 3004, 3033, 3034,
-            3035, 3056, 3101, 3102, 3201, 3206, 3207, 3302, 3303, 3304, 3401, 3406, 3407, 3502,
-            6901, 7001,
+            // CharShape (1000-range)
+            1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014,
+            1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1024, 1025, 1026, 1027, 1028,
+            1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039,
+            // ParaShape (2000-range)
+            2004, 2005, 2006, 2007, 2008, 2009, 2010, // Table (3000-range)
+            3004, 3033, 3034, 3035, 3056, // SpecialCharacter (3100-range)
+            3101, 3102, // OutlineShape (3200-range)
+            3201, 3206, 3207, // Bullet (3300-range)
+            3302, 3303, 3304, // ParaNumBullet (3400-range)
+            3401, 3406, 3407, // Style (3500-range)
+            3502, // Hyperlink (6900-range)
+            6901, // Macro (7000-range)
+            7001,
         ];
         for &code in codes {
             let msg = error_string(code, ctx());

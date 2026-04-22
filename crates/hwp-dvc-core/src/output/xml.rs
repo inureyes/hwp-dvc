@@ -98,5 +98,9 @@ fn write_elem(w: &mut XmlWriter<'_>, tag: &str, value: &str) -> Result<(), quick
 
 #[inline]
 const fn bool_str(v: bool) -> &'static str {
-    if v { "true" } else { "false" }
+    if v {
+        "true"
+    } else {
+        "false"
+    }
 }

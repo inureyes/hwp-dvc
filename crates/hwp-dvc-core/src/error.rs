@@ -110,17 +110,122 @@ pub const SPECIALCHAR_MAX: u32 = 3102;
 // CharShape-range error code constants (mirrors JsonModel.h JID_CHAR_SHAPE_*)
 // ──────────────────────────────────────────────────────────────────────────────
 
+/// Font size outside the allowed range (`JID_CHAR_SHAPE_FONTSIZE = JID_CHAR_SHAPE + 1`).
+pub const CHARSHAPE_FONTSIZE: u32 = 1001;
+
+/// LangSet slot validation failure (`JID_CHAR_SHAPE_LANGSET = JID_CHAR_SHAPE + 2`).
+pub const CHARSHAPE_LANGSET: u32 = 1002;
+
 /// Lang-type mismatch (`JID_CHAR_SHAPE_LANG = JID_CHAR_SHAPE + 3`).
 pub const CHARSHAPE_LANGTYPE: u32 = 1003;
 
 /// Font name not in the spec allow-list (`JID_CHAR_SHAPE_FONT = JID_CHAR_SHAPE + 4`).
 pub const CHARSHAPE_FONT: u32 = 1004;
 
+/// Relative size outside the allowed range (`JID_CHAR_SHAPE_RSIZE = JID_CHAR_SHAPE + 5`).
+pub const CHARSHAPE_RSIZE: u32 = 1005;
+
+/// Character position outside the allowed range (`JID_CHAR_SHAPE_POSITION = JID_CHAR_SHAPE + 6`).
+pub const CHARSHAPE_POSITION: u32 = 1006;
+
 /// Ratio value outside the allowed range (`JID_CHAR_SHAPE_RATIO = JID_CHAR_SHAPE + 7`).
 pub const CHARSHAPE_RATIO: u32 = 1007;
 
 /// Spacing value outside the allowed range (`JID_CHAR_SHAPE_SPACING = JID_CHAR_SHAPE + 8`).
 pub const CHARSHAPE_SPACING: u32 = 1008;
+
+/// Bold flag mismatch (`JID_CHAR_SHAPE_BOLD = JID_CHAR_SHAPE + 9`).
+pub const CHARSHAPE_BOLD: u32 = 1009;
+
+/// Italic flag mismatch (`JID_CHAR_SHAPE_ITALIC = JID_CHAR_SHAPE + 10`).
+pub const CHARSHAPE_ITALIC: u32 = 1010;
+
+/// Underline flag mismatch (`JID_CHAR_SHAPE_UNDERLINE = JID_CHAR_SHAPE + 11`).
+pub const CHARSHAPE_UNDERLINE: u32 = 1011;
+
+/// Strikeout flag mismatch (`JID_CHAR_SHAPE_STRIKEOUT = JID_CHAR_SHAPE + 12`).
+pub const CHARSHAPE_STRIKEOUT: u32 = 1012;
+
+/// Outline flag mismatch (`JID_CHAR_SHAPE_OUTLINE = JID_CHAR_SHAPE + 13`).
+pub const CHARSHAPE_OUTLINE: u32 = 1013;
+
+/// Emboss flag mismatch (`JID_CHAR_SHAPE_EMBOSS = JID_CHAR_SHAPE + 14`).
+pub const CHARSHAPE_EMBOSS: u32 = 1014;
+
+/// Engrave flag mismatch (`JID_CHAR_SHAPE_ENGRAVE = JID_CHAR_SHAPE + 15`).
+pub const CHARSHAPE_ENGRAVE: u32 = 1015;
+
+/// Shadow flag mismatch (`JID_CHAR_SHAPE_SHADOW = JID_CHAR_SHAPE + 16`).
+pub const CHARSHAPE_SHADOW: u32 = 1016;
+
+/// Superscript flag mismatch (`JID_CHAR_SHAPE_SUPSCRIPT = JID_CHAR_SHAPE + 17`).
+pub const CHARSHAPE_SUPSCRIPT: u32 = 1017;
+
+/// Subscript flag mismatch (`JID_CHAR_SHAPE_SUBSCRIPT = JID_CHAR_SHAPE + 18`).
+pub const CHARSHAPE_SUBSCRIPT: u32 = 1018;
+
+/// Shadow type mismatch (`JID_CHAR_SHAPE_SHADOWTYPE = JID_CHAR_SHAPE + 19`).
+pub const CHARSHAPE_SHADOWTYPE: u32 = 1019;
+
+/// Shadow X offset mismatch (`JID_CHAR_SHAPE_SHADOW_X = JID_CHAR_SHAPE + 20`).
+pub const CHARSHAPE_SHADOW_X: u32 = 1020;
+
+/// Shadow Y offset mismatch (`JID_CHAR_SHAPE_SHADOW_Y = JID_CHAR_SHAPE + 21`).
+pub const CHARSHAPE_SHADOW_Y: u32 = 1021;
+
+/// Shadow color mismatch (`JID_CHAR_SHAPE_SHADOW_COLOR = JID_CHAR_SHAPE + 22`).
+pub const CHARSHAPE_SHADOW_COLOR: u32 = 1022;
+
+/// Underline position mismatch (`JID_CHAR_SHAPE_UNDERLINE_POSITION = JID_CHAR_SHAPE + 23`).
+pub const CHARSHAPE_UNDERLINE_POSITION: u32 = 1023;
+
+/// Underline shape mismatch (`JID_CHAR_SHAPE_UNDERLINE_SHAPE = JID_CHAR_SHAPE + 24`).
+pub const CHARSHAPE_UNDERLINE_SHAPE: u32 = 1024;
+
+/// Underline color mismatch (`JID_CHAR_SHAPE_UNDERLINE_COLOR = JID_CHAR_SHAPE + 25`).
+pub const CHARSHAPE_UNDERLINE_COLOR: u32 = 1025;
+
+/// Strikeout shape mismatch (`JID_CHAR_SHAPE_STRIKEOUT_SHAPE = JID_CHAR_SHAPE + 26`).
+pub const CHARSHAPE_STRIKEOUT_SHAPE: u32 = 1026;
+
+/// Strikeout color mismatch (`JID_CHAR_SHAPE_STRIKEOUT_COLOR = JID_CHAR_SHAPE + 27`).
+pub const CHARSHAPE_STRIKEOUT_COLOR: u32 = 1027;
+
+/// Outline type mismatch (`JID_CHAR_SHAPE_OUTLINETYPE = JID_CHAR_SHAPE + 28`).
+pub const CHARSHAPE_OUTLINETYPE: u32 = 1028;
+
+/// Empty-space flag mismatch (`JID_CHAR_SHAPE_EMPTYSPACE = JID_CHAR_SHAPE + 29`).
+pub const CHARSHAPE_EMPTYSPACE: u32 = 1029;
+
+/// Point (font-size in points) mismatch (`JID_CHAR_SHAPE_POINT = JID_CHAR_SHAPE + 30`).
+pub const CHARSHAPE_POINT: u32 = 1030;
+
+/// Kerning flag mismatch (`JID_CHAR_SHAPE_KERNING = JID_CHAR_SHAPE + 31`).
+pub const CHARSHAPE_KERNING: u32 = 1031;
+
+/// Background border mismatch (`JID_CHAR_SHAPE_BG_BORDER = JID_CHAR_SHAPE + 32`).
+pub const CHARSHAPE_BG_BORDER: u32 = 1032;
+
+/// Background border position mismatch (`JID_CHAR_SHAPE_BG_BORDER_POSITION = JID_CHAR_SHAPE + 33`).
+pub const CHARSHAPE_BG_BORDER_POSITION: u32 = 1033;
+
+/// Background border-type mismatch (`JID_CHAR_SHAPE_BG_BORDER_BORDERTYPE = JID_CHAR_SHAPE + 34`).
+pub const CHARSHAPE_BG_BORDER_BORDERTYPE: u32 = 1034;
+
+/// Background border size mismatch (`JID_CHAR_SHAPE_BG_BORDER_SIZE = JID_CHAR_SHAPE + 35`).
+pub const CHARSHAPE_BG_BORDER_SIZE: u32 = 1035;
+
+/// Background border color mismatch (`JID_CHAR_SHAPE_BG_BORDER_COLOR = JID_CHAR_SHAPE + 36`).
+pub const CHARSHAPE_BG_BORDER_COLOR: u32 = 1036;
+
+/// Background fill color mismatch (`JID_CHAR_SHAPE_BG_COLOR = JID_CHAR_SHAPE + 37`).
+pub const CHARSHAPE_BG_COLOR: u32 = 1037;
+
+/// Background pattern color mismatch (`JID_CHAR_SHAPE_BG_PATTONCOLOR = JID_CHAR_SHAPE + 38`).
+pub const CHARSHAPE_BG_PATTONCOLOR: u32 = 1038;
+
+/// Background pattern type mismatch (`JID_CHAR_SHAPE_BG_PATTONTYPE = JID_CHAR_SHAPE + 39`).
+pub const CHARSHAPE_BG_PATTONTYPE: u32 = 1039;
 
 /// Outline-shape error codes within the [`ErrorCode::OutlineShape`] (3200) range.
 ///

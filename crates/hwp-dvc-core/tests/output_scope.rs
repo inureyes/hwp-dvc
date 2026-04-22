@@ -54,7 +54,12 @@ fn load_spec(name: &str) -> DvcSpec {
 }
 
 fn run_with_scope(doc: &Document, spec: &DvcSpec, scope: OutputScope) -> Vec<u32> {
-    let checker = Checker { spec, document: doc, level: CheckLevel::All, scope };
+    let checker = Checker {
+        spec,
+        document: doc,
+        level: CheckLevel::All,
+        scope,
+    };
     checker
         .run()
         .expect("Checker::run must not fail")
@@ -93,7 +98,10 @@ fn charshape_fail_font_table_scope_suppresses_charshape_errors() {
     let doc = load_doc("charshape_fail_font.hwpx");
     let spec = load_spec("fixture_spec.json");
 
-    let scope = OutputScope { table: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        table: true,
+        ..OutputScope::default()
+    };
     let codes = run_with_scope(&doc, &spec, scope);
 
     let charshape_codes: Vec<u32> = codes
@@ -119,7 +127,10 @@ fn charshape_fail_font_all_scope_emits_charshape_errors() {
     let doc = load_doc("charshape_fail_font.hwpx");
     let spec = load_spec("fixture_spec.json");
 
-    let scope = OutputScope { all: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        all: true,
+        ..OutputScope::default()
+    };
     let codes = run_with_scope(&doc, &spec, scope);
 
     assert!(
@@ -158,7 +169,10 @@ fn table_nested_hyperlink_scope_suppresses_table_errors() {
     let doc = load_doc("table_nested.hwpx");
     let spec = load_spec("fixture_spec.json");
 
-    let scope = OutputScope { hyperlink: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        hyperlink: true,
+        ..OutputScope::default()
+    };
     let codes = run_with_scope(&doc, &spec, scope);
 
     let table_codes: Vec<u32> = codes
@@ -184,7 +198,10 @@ fn charshape_fail_font_shape_scope_emits_charshape_errors() {
     let doc = load_doc("charshape_fail_font.hwpx");
     let spec = load_spec("fixture_spec.json");
 
-    let scope = OutputScope { shape: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        shape: true,
+        ..OutputScope::default()
+    };
     let codes = run_with_scope(&doc, &spec, scope);
 
     assert!(
@@ -200,7 +217,10 @@ fn charshape_fail_font_shape_scope_suppresses_table_errors() {
     let doc = load_doc("charshape_fail_font.hwpx");
     let spec = load_spec("fixture_spec.json");
 
-    let scope = OutputScope { shape: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        shape: true,
+        ..OutputScope::default()
+    };
     let codes = run_with_scope(&doc, &spec, scope);
 
     let table_codes: Vec<u32> = codes
@@ -226,7 +246,10 @@ fn style_custom_style_scope_emits_style_errors() {
     let doc = load_doc("style_custom.hwpx");
     let spec = load_spec("fixture_spec.json");
 
-    let scope = OutputScope { style: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        style: true,
+        ..OutputScope::default()
+    };
     let codes = run_with_scope(&doc, &spec, scope);
 
     assert!(
@@ -243,7 +266,10 @@ fn style_custom_table_scope_suppresses_style_errors() {
     let doc = load_doc("style_custom.hwpx");
     let spec = load_spec("fixture_spec.json");
 
-    let scope = OutputScope { table: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        table: true,
+        ..OutputScope::default()
+    };
     let codes = run_with_scope(&doc, &spec, scope);
 
     assert!(
@@ -265,7 +291,10 @@ fn hyperlink_external_hyperlink_scope_emits_hyperlink_errors() {
     let doc = load_doc("hyperlink_external.hwpx");
     let spec = load_spec("fixture_spec.json");
 
-    let scope = OutputScope { hyperlink: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        hyperlink: true,
+        ..OutputScope::default()
+    };
     let codes = run_with_scope(&doc, &spec, scope);
 
     assert!(
@@ -283,7 +312,10 @@ fn hyperlink_external_style_scope_suppresses_hyperlink_errors() {
     let doc = load_doc("hyperlink_external.hwpx");
     let spec = load_spec("fixture_spec.json");
 
-    let scope = OutputScope { style: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        style: true,
+        ..OutputScope::default()
+    };
     let codes = run_with_scope(&doc, &spec, scope);
 
     assert!(
@@ -312,7 +344,10 @@ fn output_scope_default_is_default() {
 fn output_scope_all_allows_every_category() {
     use hwp_dvc_core::checker::ScopeCategory;
 
-    let scope = OutputScope { all: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        all: true,
+        ..OutputScope::default()
+    };
     assert!(scope.allows(ScopeCategory::Shape));
     assert!(scope.allows(ScopeCategory::Table));
     assert!(scope.allows(ScopeCategory::Style));
@@ -324,7 +359,10 @@ fn output_scope_all_allows_every_category() {
 fn output_scope_table_only_gates_non_table() {
     use hwp_dvc_core::checker::ScopeCategory;
 
-    let scope = OutputScope { table: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        table: true,
+        ..OutputScope::default()
+    };
     assert!(!scope.allows(ScopeCategory::Shape));
     assert!(scope.allows(ScopeCategory::Table));
     assert!(!scope.allows(ScopeCategory::Style));
@@ -337,7 +375,10 @@ fn output_scope_table_only_gates_non_table() {
 fn output_scope_shape_only_gates_non_shape() {
     use hwp_dvc_core::checker::ScopeCategory;
 
-    let scope = OutputScope { shape: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        shape: true,
+        ..OutputScope::default()
+    };
     assert!(scope.allows(ScopeCategory::Shape));
     assert!(!scope.allows(ScopeCategory::Table));
     assert!(!scope.allows(ScopeCategory::Style));
@@ -349,7 +390,10 @@ fn output_scope_shape_only_gates_non_shape() {
 fn output_scope_tabledetail_enables_table_category() {
     use hwp_dvc_core::checker::ScopeCategory;
 
-    let scope = OutputScope { table_detail: true, ..OutputScope::default() };
+    let scope = OutputScope {
+        table_detail: true,
+        ..OutputScope::default()
+    };
     assert!(!scope.allows(ScopeCategory::Shape));
     assert!(scope.allows(ScopeCategory::Table));
     assert!(!scope.allows(ScopeCategory::Style));

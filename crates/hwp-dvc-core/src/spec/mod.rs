@@ -35,8 +35,20 @@ pub struct DvcSpec {
     pub macro_: Option<MacroSpec>,
 }
 
+/// Spec for the background-border sub-check within CharShape.
+///
+/// Maps to `JID_CHAR_SHAPE_BG_BORDER_*` (1032–1036) in `JsonModel.h`.
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct CharShapeBorderSpec {
+    pub position: Option<u32>,
+    pub bordertype: Option<u32>,
+    pub size: Option<f64>,
+    pub color: Option<String>,
+}
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct CharShapeSpec {
+    // ── existing fields (1000-range) ─────────────────────────────────────
     #[serde(default)]
     pub langtype: Option<String>,
     #[serde(default)]
@@ -45,6 +57,114 @@ pub struct CharShapeSpec {
     pub ratio: Option<i32>,
     #[serde(default)]
     pub spacing: Option<i32>,
+
+    // ── size group (1001, 1005, 1006, 1030) ──────────────────────────────
+    /// Font size in 0.1pt units (`JID_CHAR_SHAPE_FONTSIZE = 1001`).
+    #[serde(default)]
+    pub fontsize: Option<u32>,
+    /// Relative size percentage (`JID_CHAR_SHAPE_RSIZE = 1005`).
+    #[serde(default)]
+    pub rsize: Option<u32>,
+    /// Character position in 0.1pt units (`JID_CHAR_SHAPE_POSITION = 1006`).
+    #[serde(default)]
+    pub position: Option<i32>,
+    /// Font size in points (`JID_CHAR_SHAPE_POINT = 1030`).
+    #[serde(default)]
+    pub point: Option<f64>,
+
+    // ── text decoration toggles (1009–1018) ───────────────────────────────
+    /// Bold flag (`JID_CHAR_SHAPE_BOLD = 1009`).
+    #[serde(default)]
+    pub bold: Option<bool>,
+    /// Italic flag (`JID_CHAR_SHAPE_ITALIC = 1010`).
+    #[serde(default)]
+    pub italic: Option<bool>,
+    /// Underline flag (`JID_CHAR_SHAPE_UNDERLINE = 1011`).
+    #[serde(default)]
+    pub underline: Option<bool>,
+    /// Strikeout flag (`JID_CHAR_SHAPE_STRIKEOUT = 1012`).
+    #[serde(default)]
+    pub strikeout: Option<bool>,
+    /// Outline flag (`JID_CHAR_SHAPE_OUTLINE = 1013`).
+    #[serde(default)]
+    pub outline: Option<bool>,
+    /// Emboss flag (`JID_CHAR_SHAPE_EMBOSS = 1014`).
+    #[serde(default)]
+    pub emboss: Option<bool>,
+    /// Engrave flag (`JID_CHAR_SHAPE_ENGRAVE = 1015`).
+    #[serde(default)]
+    pub engrave: Option<bool>,
+    /// Shadow flag (`JID_CHAR_SHAPE_SHADOW = 1016`).
+    #[serde(default)]
+    pub shadow: Option<bool>,
+    /// Superscript flag (`JID_CHAR_SHAPE_SUPSCRIPT = 1017`).
+    #[serde(default)]
+    pub supscript: Option<bool>,
+    /// Subscript flag (`JID_CHAR_SHAPE_SUBSCRIPT = 1018`).
+    #[serde(default)]
+    pub subscript: Option<bool>,
+
+    // ── shadow detail (1019–1022) ─────────────────────────────────────────
+    /// Shadow type string (`JID_CHAR_SHAPE_SHADOWTYPE = 1019`).
+    #[serde(default)]
+    pub shadowtype: Option<String>,
+    /// Shadow X offset (`JID_CHAR_SHAPE_SHADOW_X = 1020`).
+    #[serde(rename = "shadow-x", default)]
+    pub shadow_x: Option<i32>,
+    /// Shadow Y offset (`JID_CHAR_SHAPE_SHADOW_Y = 1021`).
+    #[serde(rename = "shadow-y", default)]
+    pub shadow_y: Option<i32>,
+    /// Shadow color hex string (`JID_CHAR_SHAPE_SHADOW_COLOR = 1022`).
+    #[serde(rename = "shadow-color", default)]
+    pub shadow_color: Option<String>,
+
+    // ── underline detail (1023–1025) ──────────────────────────────────────
+    /// Underline position string (`JID_CHAR_SHAPE_UNDERLINE_POSITION = 1023`).
+    #[serde(rename = "underline-position", default)]
+    pub underline_position: Option<String>,
+    /// Underline shape string (`JID_CHAR_SHAPE_UNDERLINE_SHAPE = 1024`).
+    #[serde(rename = "underline-shape", default)]
+    pub underline_shape: Option<String>,
+    /// Underline color hex string (`JID_CHAR_SHAPE_UNDERLINE_COLOR = 1025`).
+    #[serde(rename = "underline-color", default)]
+    pub underline_color: Option<String>,
+
+    // ── strikeout detail (1026–1027) ──────────────────────────────────────
+    /// Strikeout shape string (`JID_CHAR_SHAPE_STRIKEOUT_SHAPE = 1026`).
+    #[serde(rename = "strikeout-shape", default)]
+    pub strikeout_shape: Option<String>,
+    /// Strikeout color hex string (`JID_CHAR_SHAPE_STRIKEOUT_COLOR = 1027`).
+    #[serde(rename = "strikeout-color", default)]
+    pub strikeout_color: Option<String>,
+
+    // ── outline detail (1028) ─────────────────────────────────────────────
+    /// Outline type string (`JID_CHAR_SHAPE_OUTLINETYPE = 1028`).
+    #[serde(default)]
+    pub outlinetype: Option<String>,
+
+    // ── misc (1029, 1031) ─────────────────────────────────────────────────
+    /// Empty-space flag (`JID_CHAR_SHAPE_EMPTYSPACE = 1029`).
+    #[serde(default)]
+    pub emptyspace: Option<bool>,
+    /// Kerning flag (`JID_CHAR_SHAPE_KERNING = 1031`).
+    #[serde(default)]
+    pub kerning: Option<bool>,
+
+    // ── border (1032–1036) ────────────────────────────────────────────────
+    /// Background border object (`JID_CHAR_SHAPE_BG_BORDER = 1032`).
+    #[serde(default)]
+    pub border: Option<CharShapeBorderSpec>,
+
+    // ── background (1037–1039) ────────────────────────────────────────────
+    /// Background fill color hex string (`JID_CHAR_SHAPE_BG_COLOR = 1037`).
+    #[serde(rename = "bg-color", default)]
+    pub bg_color: Option<String>,
+    /// Background pattern color hex string (`JID_CHAR_SHAPE_BG_PATTONCOLOR = 1038`).
+    #[serde(rename = "bg-pattoncolor", default)]
+    pub bg_pattoncolor: Option<String>,
+    /// Background pattern type string (`JID_CHAR_SHAPE_BG_PATTONTYPE = 1039`).
+    #[serde(rename = "bg-pattontype", default)]
+    pub bg_pattontype: Option<String>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]

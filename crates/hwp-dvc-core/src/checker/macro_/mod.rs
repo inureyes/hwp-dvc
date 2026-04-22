@@ -29,7 +29,10 @@ pub fn check(spec: &MacroSpec, document: &Document) -> Vec<DvcErrorInfo> {
 
     let error = DvcErrorInfo {
         error_code: macro_codes::MACRO_PERMISSION,
-        error_string: crate::error::error_string(macro_codes::MACRO_PERMISSION, ErrorContext::default()),
+        error_string: crate::error::error_string(
+            macro_codes::MACRO_PERMISSION,
+            ErrorContext::default(),
+        ),
         ..DvcErrorInfo::default()
     };
     vec![error]

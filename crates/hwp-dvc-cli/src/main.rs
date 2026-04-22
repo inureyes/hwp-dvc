@@ -144,7 +144,11 @@ fn main() -> Result<()> {
         .parse()
         .with_context(|| format!("failed to parse HWPX: {}", cli.hwpx.display()))?;
 
-    let level = if cli.simple { CheckLevel::Simple } else { CheckLevel::All };
+    let level = if cli.simple {
+        CheckLevel::Simple
+    } else {
+        CheckLevel::All
+    };
     let scope = OutputScope {
         all: cli.all_option,
         table: cli.table,
@@ -153,7 +157,12 @@ fn main() -> Result<()> {
         style: cli.style,
         hyperlink: cli.hyperlink,
     };
-    let checker = Checker { spec: &spec, document: &document, level, scope };
+    let checker = Checker {
+        spec: &spec,
+        document: &document,
+        level,
+        scope,
+    };
 
     let errors = checker.run().context("validation run failed")?;
 
