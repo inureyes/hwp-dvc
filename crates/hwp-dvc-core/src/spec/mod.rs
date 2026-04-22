@@ -671,6 +671,30 @@ pub struct BulletSpec {
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ParaNumBulletSpec {
+    /// Whether the numbering should restart (`true`) or continue (`false`).
+    ///
+    /// Maps to `JIN_PARANUMBULLET_STARTNUMBER` / `JID_PARANUMBULLET_STARTNUMBER`
+    /// (3402) in the reference C++ spec parser.  When `Some(true)` the spec
+    /// asserts that every matched `Numbering.start` must be non-zero (restart);
+    /// when `Some(false)` it asserts `start == 0` (continue).  When `None` the
+    /// field is absent from the spec JSON and the check is skipped.
+    #[serde(rename = "startnumber", default)]
+    pub start_number: Option<bool>,
+
+    /// The required starting value for the first level of each matched
+    /// numbering.
+    ///
+    /// Maps to `JIN_PARANUMBULLET_VALUE` / `JID_PARANUMBULLET_VALUE` (3403).
+    /// When `Some(v)` the spec asserts that the first-level `paraHead.start`
+    /// in every matched `Numbering` equals `v`.  When `None` the check is
+    /// skipped.
+    #[serde(default)]
+    pub value: Option<u32>,
+
+    /// Per-level format constraints for paragraph numbering.
+    ///
+    /// Maps to the `JIN_PARANUMBULLET_LEVELTYPE` array (3404). Each entry
+    /// specifies the required format for one heading level.
     #[serde(default)]
     pub leveltype: Vec<LevelType>,
 }
@@ -775,5 +799,41 @@ mod tests {
         let spec = DvcSpec::from_json_str(s).unwrap();
         let t = spec.table.unwrap();
         assert!(!t.has_cell_detail_fields());
+    }
+
+    #[test]
+    fn paranumbullet_spec_parses_new_fields() {
+        // Verify that start_number, value, and leveltype can be round-tripped
+        // from JSON.  These fields were added to mirror JID_PARANUMBULLET_STARTNUMBER
+        // (3402), JID_PARANUMBULLET_VALUE (3403), and JID_PARANUMBULLET_LEVELTYPE
+        // (3404) from `references/dvc/Source/JsonModel.h`.
+        let s = r#"{
+            "paranumbullet": {
+                "startnumber": true,
+                "value": 3,
+                "leveltype": [
+                    { "level": 1, "numbertype": "DIGIT", "numbershape": 0 }
+                ]
+            }
+        }"#;
+        let spec = DvcSpec::from_json_str(s).unwrap();
+        let pnb = spec.paranumbullet.unwrap();
+        assert_eq!(pnb.start_number, Some(true));
+        assert_eq!(pnb.value, Some(3));
+        assert_eq!(pnb.leveltype.len(), 1);
+        assert_eq!(pnb.leveltype[0].level, 1);
+        assert_eq!(pnb.leveltype[0].numbertype.as_deref(), Some("DIGIT"));
+        assert_eq!(pnb.leveltype[0].numbershape, 0);
+    }
+
+    #[test]
+    fn paranumbullet_spec_defaults_when_fields_absent() {
+        // Verify that omitting optional fields leaves them as None/empty.
+        let s = r#"{ "paranumbullet": {} }"#;
+        let spec = DvcSpec::from_json_str(s).unwrap();
+        let pnb = spec.paranumbullet.unwrap();
+        assert_eq!(pnb.start_number, None);
+        assert_eq!(pnb.value, None);
+        assert!(pnb.leveltype.is_empty());
     }
 }

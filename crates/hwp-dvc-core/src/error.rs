@@ -380,6 +380,27 @@ pub mod outline_shape_codes {
 pub mod para_num_bullet_codes {
     /// `JID_PARANUMBULLET_TYPE` — overall type mismatch (3401).
     pub const PARANUM_TYPE: u32 = 3401;
+    /// `JID_PARANUMBULLET_STARTNUMBER` — start-number flag mismatch (3402).
+    ///
+    /// Emitted when the spec declares `start_number` and the document numbering
+    /// entry does not match the expected restart behaviour.
+    pub const PARANUM_STARTNUMBER: u32 = 3402;
+    /// `JID_PARANUMBULLET_VALUE` — starting value mismatch (3403).
+    ///
+    /// Emitted when the spec declares `value` and the first-level `paraHead.start`
+    /// in the matching `Numbering` entry differs from the spec value.
+    pub const PARANUM_VALUE: u32 = 3403;
+    /// `JID_PARANUMBULLET_LEVELTYPE` — leveltype wrapper mismatch (3404).
+    ///
+    /// Emitted when the spec declares a `leveltype` wrapper but no `paraHead`
+    /// with a matching level exists in the `Numbering` entry.
+    pub const PARANUM_LEVELTYPE: u32 = 3404;
+    /// `JID_PARANUMBULLET_LEVELTYPE_LEVEL` — level index mismatch within a leveltype
+    /// entry (3405).
+    ///
+    /// Emitted when a `LevelType` spec entry declares a `level` value that does
+    /// not match the actual `paraHead.level` found in the document numbering.
+    pub const PARANUM_LEVELTYPE_LEVEL: u32 = 3405;
     /// `JID_PARANUMBULLET_LEVELTYPE_NUMBERTYPE` — level number-type mismatch (3406).
     pub const PARANUM_LEVEL_NUMBERTYPE: u32 = 3406;
     /// `JID_PARANUMBULLET_LEVELTYPE_NUMBERSHAPE` — level number-shape mismatch (3407).
