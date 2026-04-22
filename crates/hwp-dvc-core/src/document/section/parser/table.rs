@@ -21,7 +21,7 @@ use quick_xml::Reader;
 use crate::document::section::types::{Cell, Row, Table};
 use crate::error::{DvcError, DvcResult};
 
-use super::common::{attr_u32, local_name};
+use super::common::{attr_bool01, attr_i32, attr_string, attr_u32, local_name};
 use super::paragraph::{parse_paragraph, skip};
 
 /// Parse an `<hp:tbl>` element whose start tag has already been
@@ -29,6 +29,13 @@ use super::paragraph::{parse_paragraph, skip};
 /// enclosing paragraph was walked at. The returned table's
 /// `nesting_depth == parent_depth` (i.e., a table directly in a
 /// body-level paragraph is depth 0).
+///
+/// Beyond the minimal identity attributes, this walker also collects
+/// the sizing / position / margin / caption fields the standard-mode
+/// validator needs (issue #41). Attribute collection is tolerant of
+/// omission: writers may legally leave default values off and the
+/// defaults here (`0` for integers, empty string for enums) match the
+/// "unset" semantics the validator relies on.
 pub(super) fn parse_table<B: BufRead>(
     reader: &mut Reader<B>,
     start: &BytesStart<'_>,
@@ -39,8 +46,14 @@ pub(super) fn parse_table<B: BufRead>(
         border_fill_id_ref: attr_u32(start.attributes(), b"borderFillIDRef")?,
         row_cnt: attr_u32(start.attributes(), b"rowCnt")?,
         col_cnt: attr_u32(start.attributes(), b"colCnt")?,
-        rows: Vec::new(),
+        cell_spacing: attr_u32(start.attributes(), b"cellSpacing")?,
+        text_wrap: attr_string(start.attributes(), b"textWrap")?,
+        text_flow: attr_string(start.attributes(), b"textFlow")?,
+        numbering_type: attr_string(start.attributes(), b"numberingType")?,
+        lock: attr_u32(start.attributes(), b"lock")?,
+        no_adjust: attr_u32(start.attributes(), b"noAdjust")?,
         nesting_depth: parent_depth,
+        ..Table::default()
     };
 
     let mut buf = Vec::new();
@@ -56,13 +69,75 @@ pub(super) fn parse_table<B: BufRead>(
                 let _ = e; // attributes unused for an empty row
                 table.rows.push(Row::default());
             }
+            Event::Empty(ref e) => {
+                collect_table_metadata(&mut table, e)?;
+            }
+            Event::Start(ref e) => match local_name(e.name()) {
+                // Caption lives as a child element whose attributes
+                // carry side/size/etc. We only read its attributes and
+                // then skip its body — the inner paragraphs are not
+                // needed by the standard-mode checker.
+                b"caption" => {
+                    collect_caption_metadata(&mut table, e)?;
+                    skip(reader, e)?;
+                }
+                _ => skip(reader, e)?,
+            },
             Event::End(ref e) if local_name(e.name()) == b"tbl" => return Ok(table),
-            Event::Start(ref e) => skip(reader, e)?,
             Event::Eof => return Err(DvcError::Document("unexpected EOF inside <tbl>".into())),
             _ => {}
         }
         buf.clear();
     }
+}
+
+/// Copy attributes off a direct `<hp:tbl>` child that is always
+/// emitted as a self-closing element (`<hp:sz .../>`, `<hp:pos .../>`,
+/// `<hp:outMargin .../>`). Unknown elements are silently ignored so
+/// writer-specific additions do not break parsing.
+fn collect_table_metadata(table: &mut Table, e: &BytesStart<'_>) -> DvcResult<()> {
+    match local_name(e.name()) {
+        b"sz" => {
+            table.width = attr_u32(e.attributes(), b"width")?;
+            table.height = attr_u32(e.attributes(), b"height")?;
+            table.size_protect = attr_bool01(e.attributes(), b"protect")?;
+        }
+        b"pos" => {
+            table.treat_as_char = attr_bool01(e.attributes(), b"treatAsChar")?;
+            table.flow_with_text = attr_bool01(e.attributes(), b"flowWithText")?;
+            table.allow_overlap = attr_bool01(e.attributes(), b"allowOverlap")?;
+            table.hold_anchor_and_so = attr_bool01(e.attributes(), b"holdAnchorAndSO")?;
+            table.affect_l_spacing = attr_bool01(e.attributes(), b"affectLSpacing")?;
+            table.horz_rel_to = attr_string(e.attributes(), b"horzRelTo")?;
+            table.vert_rel_to = attr_string(e.attributes(), b"vertRelTo")?;
+            table.horz_align = attr_string(e.attributes(), b"horzAlign")?;
+            table.vert_align = attr_string(e.attributes(), b"vertAlign")?;
+            table.horz_offset = attr_i32(e.attributes(), b"horzOffset")?;
+            table.vert_offset = attr_i32(e.attributes(), b"vertOffset")?;
+        }
+        b"outMargin" => {
+            table.out_margin_left = attr_u32(e.attributes(), b"left")?;
+            table.out_margin_right = attr_u32(e.attributes(), b"right")?;
+            table.out_margin_top = attr_u32(e.attributes(), b"top")?;
+            table.out_margin_bottom = attr_u32(e.attributes(), b"bottom")?;
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+/// Copy caption attributes off a `<hp:caption>` element. The reference
+/// OWPML writer emits `side`, `sz`, `gap`, `fullSz`, and `lineWrap` on
+/// the caption container itself. Missing attributes default to their
+/// zero equivalents, consistent with the rest of the table walker.
+fn collect_caption_metadata(table: &mut Table, e: &BytesStart<'_>) -> DvcResult<()> {
+    table.has_caption = true;
+    table.caption_side = attr_string(e.attributes(), b"side")?;
+    table.caption_size = attr_u32(e.attributes(), b"sz")?;
+    table.caption_spacing = attr_i32(e.attributes(), b"gap")?;
+    table.caption_full_size = attr_bool01(e.attributes(), b"fullSz")?;
+    table.caption_line_wrap = attr_bool01(e.attributes(), b"lineWrap")?;
+    Ok(())
 }
 
 /// Parse an `<hp:tr>` body up to its closing tag.

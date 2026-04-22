@@ -353,6 +353,7 @@ mod tests {
                 }],
             }],
             nesting_depth: 1,
+            ..Table::default()
         };
         let middle_para = Paragraph {
             para_pr_id_ref: 0,
@@ -378,6 +379,7 @@ mod tests {
                 }],
             }],
             nesting_depth: 0,
+            ..Table::default()
         };
         s.paragraphs.push(Paragraph {
             para_pr_id_ref: 0,
