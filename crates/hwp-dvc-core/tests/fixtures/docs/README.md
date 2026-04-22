@@ -157,6 +157,17 @@ a matter of typing the sample text into a blank document and saving.
 - Leave font and spacing at baseline.
 - Expected: **1 error** in the 1000 range for ratio.
 
+#### `charshape_fail_bold.hwpx` ⏳ (needs 한글 authoring)
+- Baseline body **plus** one paragraph where bold is set via
+  `서식 → 글자 모양 → 굵게`.
+- Spec field: `"bold": false`.
+- This fixture cannot be synthesized via XML patching because the
+  OWPML `<hh:bold/>` element's presence/absence must round-trip
+  through 한글's charPr table.
+- Once authored, add to `fixture_spec.json` as `"bold": false` and
+  add a test in `check_char_shape_extended.rs` mirroring the font-fail
+  pattern. Error code: `CHARSHAPE_BOLD (1009)`.
+
 ---
 
 ### ParaShape

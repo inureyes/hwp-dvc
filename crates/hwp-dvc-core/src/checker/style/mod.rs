@@ -20,7 +20,7 @@
 
 use crate::checker::DvcErrorInfo;
 use crate::document::RunTypeInfo;
-use crate::error::{ErrorContext, ErrorCode};
+use crate::error::{ErrorCode, ErrorContext};
 use crate::spec::StyleSpec;
 
 /// Concrete error code emitted when a run uses a non-default style and

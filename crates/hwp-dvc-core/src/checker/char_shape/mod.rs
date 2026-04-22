@@ -15,17 +15,47 @@
 //!
 //! # Error codes
 //!
-//! The four codes exposed by this issue are:
-//!
-//! | Constant               | Value | `JID_*` reference            |
-//! |------------------------|-------|------------------------------|
-//! | `CHARSHAPE_LANGTYPE`   | 1003  | `JID_CHAR_SHAPE_LANG`        |
-//! | `CHARSHAPE_FONT`       | 1004  | `JID_CHAR_SHAPE_FONT`        |
-//! | `CHARSHAPE_RATIO`      | 1007  | `JID_CHAR_SHAPE_RATIO`       |
-//! | `CHARSHAPE_SPACING`    | 1008  | `JID_CHAR_SHAPE_SPACING`     |
-//!
-//! Additional spec fields (bold, italic, shadow, …) are TODO-annotated
-//! below with the matching `JID_CHAR_SHAPE_*` constant.
+//! | Constant                       | Value | `JID_*` reference                  |
+//! |--------------------------------|-------|------------------------------------|
+//! | `CHARSHAPE_FONTSIZE`           | 1001  | `JID_CHAR_SHAPE_FONTSIZE`          |
+//! | `CHARSHAPE_LANGSET`            | 1002  | `JID_CHAR_SHAPE_LANGSET`           |
+//! | `CHARSHAPE_LANGTYPE`           | 1003  | `JID_CHAR_SHAPE_LANG`              |
+//! | `CHARSHAPE_FONT`               | 1004  | `JID_CHAR_SHAPE_FONT`              |
+//! | `CHARSHAPE_RSIZE`              | 1005  | `JID_CHAR_SHAPE_RSIZE`             |
+//! | `CHARSHAPE_POSITION`           | 1006  | `JID_CHAR_SHAPE_POSITION`          |
+//! | `CHARSHAPE_RATIO`              | 1007  | `JID_CHAR_SHAPE_RATIO`             |
+//! | `CHARSHAPE_SPACING`            | 1008  | `JID_CHAR_SHAPE_SPACING`           |
+//! | `CHARSHAPE_BOLD`               | 1009  | `JID_CHAR_SHAPE_BOLD`              |
+//! | `CHARSHAPE_ITALIC`             | 1010  | `JID_CHAR_SHAPE_ITALIC`            |
+//! | `CHARSHAPE_UNDERLINE`          | 1011  | `JID_CHAR_SHAPE_UNDERLINE`         |
+//! | `CHARSHAPE_STRIKEOUT`          | 1012  | `JID_CHAR_SHAPE_STRIKEOUT`         |
+//! | `CHARSHAPE_OUTLINE`            | 1013  | `JID_CHAR_SHAPE_OUTLINE`           |
+//! | `CHARSHAPE_EMBOSS`             | 1014  | `JID_CHAR_SHAPE_EMBOSS`            |
+//! | `CHARSHAPE_ENGRAVE`            | 1015  | `JID_CHAR_SHAPE_ENGRAVE`           |
+//! | `CHARSHAPE_SHADOW`             | 1016  | `JID_CHAR_SHAPE_SHADOW`            |
+//! | `CHARSHAPE_SUPSCRIPT`          | 1017  | `JID_CHAR_SHAPE_SUPSCRIPT`         |
+//! | `CHARSHAPE_SUBSCRIPT`          | 1018  | `JID_CHAR_SHAPE_SUBSCRIPT`         |
+//! | `CHARSHAPE_SHADOWTYPE`         | 1019  | `JID_CHAR_SHAPE_SHADOWTYPE`        |
+//! | `CHARSHAPE_SHADOW_X`           | 1020  | `JID_CHAR_SHAPE_SHADOW_X`          |
+//! | `CHARSHAPE_SHADOW_Y`           | 1021  | `JID_CHAR_SHAPE_SHADOW_Y`          |
+//! | `CHARSHAPE_SHADOW_COLOR`       | 1022  | `JID_CHAR_SHAPE_SHADOW_COLOR`      |
+//! | `CHARSHAPE_UNDERLINE_POSITION` | 1023  | `JID_CHAR_SHAPE_UNDERLINE_POSITION`|
+//! | `CHARSHAPE_UNDERLINE_SHAPE`    | 1024  | `JID_CHAR_SHAPE_UNDERLINE_SHAPE`   |
+//! | `CHARSHAPE_UNDERLINE_COLOR`    | 1025  | `JID_CHAR_SHAPE_UNDERLINE_COLOR`   |
+//! | `CHARSHAPE_STRIKEOUT_SHAPE`    | 1026  | `JID_CHAR_SHAPE_STRIKEOUT_SHAPE`   |
+//! | `CHARSHAPE_STRIKEOUT_COLOR`    | 1027  | `JID_CHAR_SHAPE_STRIKEOUT_COLOR`   |
+//! | `CHARSHAPE_OUTLINETYPE`        | 1028  | `JID_CHAR_SHAPE_OUTLINETYPE`       |
+//! | `CHARSHAPE_EMPTYSPACE`         | 1029  | `JID_CHAR_SHAPE_EMPTYSPACE`        |
+//! | `CHARSHAPE_POINT`              | 1030  | `JID_CHAR_SHAPE_POINT`             |
+//! | `CHARSHAPE_KERNING`            | 1031  | `JID_CHAR_SHAPE_KERNING`           |
+//! | `CHARSHAPE_BG_BORDER`          | 1032  | `JID_CHAR_SHAPE_BG_BORDER`         |
+//! | `CHARSHAPE_BG_BORDER_POSITION` | 1033  | `JID_CHAR_SHAPE_BG_BORDER_POSITION`|
+//! | `CHARSHAPE_BG_BORDER_BORDERTYPE`| 1034 | `JID_CHAR_SHAPE_BG_BORDER_BORDERTYPE`|
+//! | `CHARSHAPE_BG_BORDER_SIZE`     | 1035  | `JID_CHAR_SHAPE_BG_BORDER_SIZE`    |
+//! | `CHARSHAPE_BG_BORDER_COLOR`    | 1036  | `JID_CHAR_SHAPE_BG_BORDER_COLOR`   |
+//! | `CHARSHAPE_BG_COLOR`           | 1037  | `JID_CHAR_SHAPE_BG_COLOR`          |
+//! | `CHARSHAPE_BG_PATTONCOLOR`     | 1038  | `JID_CHAR_SHAPE_BG_PATTONCOLOR`    |
+//! | `CHARSHAPE_BG_PATTONTYPE`      | 1039  | `JID_CHAR_SHAPE_BG_PATTONTYPE`     |
 
 use crate::checker::{CheckLevel, DvcErrorInfo};
 use crate::document::header::{CharShape, FontFace, HeaderTables};
@@ -38,41 +68,18 @@ use crate::spec::CharShapeSpec;
 // (base 1000 = JID_CHAR_SHAPE per references/dvc/Source/JsonModel.h).
 // ──────────────────────────────────────────────────────────────────────────────
 
-/// Error code for a lang-type mismatch (`JID_CHAR_SHAPE_LANG = 1003`).
-pub const CHARSHAPE_LANGTYPE: u32 = 1003;
-
-/// Error code for a font-name not in the allow-list (`JID_CHAR_SHAPE_FONT = 1004`).
-pub const CHARSHAPE_FONT: u32 = 1004;
-
-/// Error code for a ratio value outside the allowed range
-/// (`JID_CHAR_SHAPE_RATIO = 1007`).
-pub const CHARSHAPE_RATIO: u32 = 1007;
-
-/// Error code for a spacing value outside the allowed range
-/// (`JID_CHAR_SHAPE_SPACING = 1008`).
-pub const CHARSHAPE_SPACING: u32 = 1008;
-
-// TODO: JID_CHAR_SHAPE_FONTSIZE = 1001 — font size range check
-// TODO: JID_CHAR_SHAPE_LANGSET  = 1002 — langset object validation
-// TODO: JID_CHAR_SHAPE_RSIZE    = 1005 — relative size range check
-// TODO: JID_CHAR_SHAPE_POSITION = 1006 — character position check
-// TODO: JID_CHAR_SHAPE_BOLD     = 1009 — bold flag check
-// TODO: JID_CHAR_SHAPE_ITALIC   = 1010 — italic flag check
-// TODO: JID_CHAR_SHAPE_UNDERLINE = 1011 — underline flag check
-// TODO: JID_CHAR_SHAPE_STRIKEOUT = 1012 — strikeout flag check
-// TODO: JID_CHAR_SHAPE_OUTLINE  = 1013 — outline flag check
-// TODO: JID_CHAR_SHAPE_EMBOSS   = 1014 — emboss flag check
-// TODO: JID_CHAR_SHAPE_ENGRAVE  = 1015 — engrave flag check
-// TODO: JID_CHAR_SHAPE_SHADOW   = 1016 — shadow flag check
-// TODO: JID_CHAR_SHAPE_SUPSCRIPT = 1017 — superscript flag check
-// TODO: JID_CHAR_SHAPE_SUBSCRIPT = 1018 — subscript flag check
-// TODO: JID_CHAR_SHAPE_SHADOWTYPE = 1019 — shadow type check
-// TODO: JID_CHAR_SHAPE_SHADOW_X  = 1020 — shadow X direction check
-// TODO: JID_CHAR_SHAPE_SHADOW_Y  = 1021 — shadow Y direction check
-// TODO: JID_CHAR_SHAPE_SHADOW_COLOR = 1022 — shadow color check
-// TODO: JID_CHAR_SHAPE_KERNING   = 1031 — kerning flag check
-// TODO: JID_CHAR_SHAPE_BG_BORDER = 1032 — background border check
-// TODO: JID_CHAR_SHAPE_BG_COLOR  = 1037 — background color check
+pub use crate::error::{
+    CHARSHAPE_BG_BORDER, CHARSHAPE_BG_BORDER_BORDERTYPE, CHARSHAPE_BG_BORDER_COLOR,
+    CHARSHAPE_BG_BORDER_POSITION, CHARSHAPE_BG_BORDER_SIZE, CHARSHAPE_BG_COLOR,
+    CHARSHAPE_BG_PATTONCOLOR, CHARSHAPE_BG_PATTONTYPE, CHARSHAPE_BOLD, CHARSHAPE_EMBOSS,
+    CHARSHAPE_EMPTYSPACE, CHARSHAPE_ENGRAVE, CHARSHAPE_FONT, CHARSHAPE_FONTSIZE, CHARSHAPE_ITALIC,
+    CHARSHAPE_KERNING, CHARSHAPE_LANGSET, CHARSHAPE_LANGTYPE, CHARSHAPE_OUTLINE,
+    CHARSHAPE_OUTLINETYPE, CHARSHAPE_POINT, CHARSHAPE_POSITION, CHARSHAPE_RATIO, CHARSHAPE_RSIZE,
+    CHARSHAPE_SHADOW, CHARSHAPE_SHADOWTYPE, CHARSHAPE_SHADOW_COLOR, CHARSHAPE_SHADOW_X,
+    CHARSHAPE_SHADOW_Y, CHARSHAPE_SPACING, CHARSHAPE_STRIKEOUT, CHARSHAPE_STRIKEOUT_COLOR,
+    CHARSHAPE_STRIKEOUT_SHAPE, CHARSHAPE_SUBSCRIPT, CHARSHAPE_SUPSCRIPT, CHARSHAPE_UNDERLINE,
+    CHARSHAPE_UNDERLINE_COLOR, CHARSHAPE_UNDERLINE_POSITION, CHARSHAPE_UNDERLINE_SHAPE,
+};
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Internal intermediate record
@@ -175,6 +182,32 @@ fn check_char_shape_to_check_list(
     font_faces: &[FontFace],
     errors: &mut Vec<ErrorInfo>,
 ) {
+    // JID_CHAR_SHAPE_FONTSIZE (1001) — font size in 0.1pt units.
+    //
+    // `CharShape.height` stores the font size in 0.1pt units. Compared
+    // against the spec's `fontsize` integer for an exact match.
+    if let Some(spec_fontsize) = spec.fontsize {
+        if cs.height != spec_fontsize {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_FONTSIZE,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_LANGSET (1002) — per-language slot validation.
+    //
+    // The langset check in the reference validates that each document charshape
+    // uses a lang slot matching the spec-supplied langset object. Full per-slot
+    // validation requires the document-side `LangType` decoding which is deferred
+    // to a later issue (see TODO below). The constant is registered and wired
+    // to a stub so downstream code referencing CHARSHAPE_LANGSET compiles cleanly.
+    //
+    // TODO(#9): implement full langset slot validation once CharShape carries
+    // the resolved LangType per slot. Error code: CHARSHAPE_LANGSET (1002).
+    let _ = spec.langtype.as_ref(); // Used below in the langtype check
+
     // JID_CHAR_SHAPE_LANG (1003) — langtype check.
     //
     // The reference stores langtype as a raw integer (LangType enum).
@@ -188,7 +221,7 @@ fn check_char_shape_to_check_list(
     // matches the reference behaviour of flagging the charshape when the
     // field is active but cannot be verified.
     //
-    // TODO: decode the hangul/latin/… langtype from CharShape once the
+    // TODO(#9): decode the hangul/latin/… langtype from CharShape once the
     // header parser exposes it (issue #2 addendum).
     if let Some(ref _langtype) = spec.langtype {
         // langtype verification requires the document-side lang enum which is
@@ -218,6 +251,36 @@ fn check_char_shape_to_check_list(
                 char_pr_id: cs.id,
                 error_code: CHARSHAPE_FONT,
                 font_name,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_RSIZE (1005) — relative size range check.
+    //
+    // `CharShape.rel_sz` stores relative size per language slot (percentage).
+    // We check the Hangul slot (index 0) for an exact match with the spec.
+    if let Some(spec_rsize) = spec.rsize {
+        let doc_rsize = cs.rel_sz.values[0]; // Hangul slot
+        if doc_rsize != spec_rsize {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_RSIZE,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_POSITION (1006) — character position check.
+    //
+    // `CharShape.offset` stores vertical position per language slot (in 0.1pt units).
+    // We check the Hangul slot (index 0) for an exact match with the spec.
+    if let Some(spec_position) = spec.position {
+        let doc_position = cs.offset.values[0]; // Hangul slot
+        if doc_position != spec_position {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_POSITION,
+                font_name: None,
             });
         }
     }
@@ -254,6 +317,233 @@ fn check_char_shape_to_check_list(
             });
         }
     }
+
+    // JID_CHAR_SHAPE_BOLD (1009) — bold flag check.
+    if let Some(spec_bold) = spec.bold {
+        if cs.bold != spec_bold {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_BOLD,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_ITALIC (1010) — italic flag check.
+    if let Some(spec_italic) = spec.italic {
+        if cs.italic != spec_italic {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_ITALIC,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_UNDERLINE (1011) — underline flag check.
+    if let Some(spec_underline) = spec.underline {
+        if cs.underline != spec_underline {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_UNDERLINE,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_STRIKEOUT (1012) — strikeout flag check.
+    if let Some(spec_strikeout) = spec.strikeout {
+        if cs.strikeout != spec_strikeout {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_STRIKEOUT,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_OUTLINE (1013) — outline flag check.
+    if let Some(spec_outline) = spec.outline {
+        if cs.outline != spec_outline {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_OUTLINE,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_EMBOSS (1014) — emboss flag check.
+    if let Some(spec_emboss) = spec.emboss {
+        if cs.emboss != spec_emboss {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_EMBOSS,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_ENGRAVE (1015) — engrave flag check.
+    if let Some(spec_engrave) = spec.engrave {
+        if cs.engrave != spec_engrave {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_ENGRAVE,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_SHADOW (1016) — shadow flag check.
+    if let Some(spec_shadow) = spec.shadow {
+        if cs.shadow != spec_shadow {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_SHADOW,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_SUPSCRIPT (1017) — superscript flag check.
+    if let Some(spec_supscript) = spec.supscript {
+        if cs.supscript != spec_supscript {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_SUPSCRIPT,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_SUBSCRIPT (1018) — subscript flag check.
+    if let Some(spec_subscript) = spec.subscript {
+        if cs.subscript != spec_subscript {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_SUBSCRIPT,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_SHADOWTYPE (1019) — shadow type check.
+    //
+    // The document stores the shadow type as the "type" attribute of the
+    // `<hh:shadow>` element. The CharShape bool `shadow` indicates active/inactive
+    // but the detailed type string is not yet parsed into a dedicated field.
+    //
+    // TODO: extend CharShape to carry shadow_type: String once the header parser
+    // is extended to preserve the type attribute. Error code: CHARSHAPE_SHADOWTYPE (1019).
+
+    // JID_CHAR_SHAPE_SHADOW_X (1020), JID_CHAR_SHAPE_SHADOW_Y (1021),
+    // JID_CHAR_SHAPE_SHADOW_COLOR (1022) — shadow detail checks.
+    //
+    // These sub-fields (offsetX, offsetY, color from `<hh:shadow>`) require
+    // CharShape to carry dedicated shadow_offset_x, shadow_offset_y, shadow_color
+    // fields that are not yet decoded by the header parser.
+    //
+    // TODO: extend CharShape and the header parser to carry shadow detail attrs.
+    // Error codes: CHARSHAPE_SHADOW_X (1020), CHARSHAPE_SHADOW_Y (1021),
+    //              CHARSHAPE_SHADOW_COLOR (1022).
+
+    // JID_CHAR_SHAPE_UNDERLINE_POSITION (1023), _SHAPE (1024), _COLOR (1025)
+    // JID_CHAR_SHAPE_STRIKEOUT_SHAPE (1026), _COLOR (1027)
+    // JID_CHAR_SHAPE_OUTLINETYPE (1028)
+    //
+    // These sub-fields require the header parser to store the shape/type/color
+    // attributes from the `<hh:underline>`, `<hh:strikeout>`, and `<hh:outline>`
+    // child elements. The current CharShape only carries the boolean presence flags.
+    //
+    // TODO: extend CharShape to carry underline_position, underline_shape,
+    // underline_color, strikeout_shape, strikeout_color, outline_type.
+    // Error codes: 1023–1028.
+
+    // JID_CHAR_SHAPE_EMPTYSPACE (1029) — empty-space flag.
+    //
+    // Corresponds to `useFontSpace` attribute on `<hh:charPr>`.
+    if let Some(spec_emptyspace) = spec.emptyspace {
+        if cs.use_font_space != spec_emptyspace {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_EMPTYSPACE,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_POINT (1030) — font size in points.
+    //
+    // The reference stores font size as both raw HWPUNIT (height) and as a
+    // floating-point point value. We derive the point value from `height`:
+    // HWPX stores height in 1/100pt units, so `point = height / 100.0`.
+    // (e.g. height=1000 → 10pt, height=1200 → 12pt)
+    if let Some(spec_point) = spec.point {
+        let doc_point = cs.height as f64 / 100.0;
+        // Use a small epsilon for float comparison (0.05 pt tolerance).
+        if (doc_point - spec_point).abs() > 0.05 {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_POINT,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_KERNING (1031) — kerning flag.
+    //
+    // Corresponds to `useKerning` attribute on `<hh:charPr>`.
+    if let Some(spec_kerning) = spec.kerning {
+        if cs.use_kerning != spec_kerning {
+            errors.push(ErrorInfo {
+                char_pr_id: cs.id,
+                error_code: CHARSHAPE_KERNING,
+                font_name: None,
+            });
+        }
+    }
+
+    // JID_CHAR_SHAPE_BG_BORDER (1032) through JID_CHAR_SHAPE_BG_BORDER_COLOR (1036)
+    //
+    // The CharShape carries `border_fill_id_ref` which references a BorderFill
+    // entry in the header. The `tables` parameter only exposes `char_shapes` and
+    // `font_faces` in the current function signature; border-fill lookups require
+    // the full `HeaderTables`. For the extended border check we do a conservative
+    // presence check: if the spec supplies a border object and the charshape's
+    // borderFillIDRef is 0 (= no border), emit a BG_BORDER error. More granular
+    // sub-checks (position, type, size, color) are deferred until HeaderTables is
+    // threaded through this function path.
+    //
+    // TODO: thread `&HeaderTables` through to enable full border sub-field checks
+    // (1033–1036). Error codes: CHARSHAPE_BG_BORDER_POSITION (1033),
+    // CHARSHAPE_BG_BORDER_BORDERTYPE (1034), CHARSHAPE_BG_BORDER_SIZE (1035),
+    // CHARSHAPE_BG_BORDER_COLOR (1036).
+    if spec.border.is_some() && cs.border_fill_id_ref == 0 {
+        errors.push(ErrorInfo {
+            char_pr_id: cs.id,
+            error_code: CHARSHAPE_BG_BORDER,
+            font_name: None,
+        });
+    }
+
+    // JID_CHAR_SHAPE_BG_COLOR (1037) — background fill color.
+    //
+    // The background color is part of the BorderFill record (via `border_fill_id_ref`),
+    // not directly on CharShape. Detailed fill-color comparison requires looking up
+    // the BorderFill in HeaderTables and comparing its fill brush color.
+    //
+    // TODO: look up BorderFill from HeaderTables and compare fill color against
+    // spec.bg_color. Error code: CHARSHAPE_BG_COLOR (1037).
+
+    // JID_CHAR_SHAPE_BG_PATTONCOLOR (1038), JID_CHAR_SHAPE_BG_PATTONTYPE (1039)
+    //
+    // Background pattern color and type live inside the `<hc:fillBrush>` subtree
+    // of the referenced `<hh:borderFill>`. These are not decoded by the current
+    // border fill parser.
+    //
+    // TODO: extend BorderFill to carry fill-brush pattern color/type.
+    // Error codes: CHARSHAPE_BG_PATTONCOLOR (1038), CHARSHAPE_BG_PATTONTYPE (1039).
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -334,7 +624,7 @@ mod tests {
             font: vec!["함초롬바탕".to_string(), "함초롬돋움".to_string()],
             ratio: Some(100),
             spacing: Some(0),
-            langtype: None,
+            ..Default::default()
         };
 
         let errors = check(&spec, &tables, &runs, CheckLevel::All);
@@ -355,7 +645,7 @@ mod tests {
             font: vec!["함초롬바탕".to_string()],
             ratio: Some(100),
             spacing: Some(0),
-            langtype: None,
+            ..Default::default()
         };
 
         let errors = check(&spec, &tables, &runs, CheckLevel::All);
@@ -372,12 +662,7 @@ mod tests {
         let tables = make_tables_with(cs, font_faces);
         let runs = vec![make_run(0)];
 
-        let spec = CharShapeSpec {
-            font: vec![],
-            ratio: None,
-            spacing: None,
-            langtype: None,
-        };
+        let spec = CharShapeSpec::default();
 
         let errors = check(&spec, &tables, &runs, CheckLevel::All);
         assert!(
@@ -399,7 +684,7 @@ mod tests {
             font: vec!["함초롬바탕".to_string()],
             ratio: Some(100),
             spacing: Some(0),
-            langtype: None,
+            ..Default::default()
         };
 
         let errors = check(&spec, &tables, &runs, CheckLevel::All);
@@ -424,7 +709,7 @@ mod tests {
             font: vec!["함초롬바탕".to_string()],
             ratio: Some(100),
             spacing: Some(0),
-            langtype: None,
+            ..Default::default()
         };
 
         let errors = check(&spec, &tables, &runs, CheckLevel::All);
@@ -447,7 +732,7 @@ mod tests {
             font: vec!["함초롬바탕".to_string()],
             ratio: Some(100),
             spacing: Some(0),
-            langtype: None,
+            ..Default::default()
         };
 
         let errors = check(&spec, &tables, &runs, CheckLevel::All);
@@ -472,13 +757,427 @@ mod tests {
             font: vec!["함초롬바탕".to_string()],
             ratio: Some(100),
             spacing: Some(0),
-            langtype: None,
+            ..Default::default()
         };
 
         let errors = check(&spec, &tables, &runs, CheckLevel::All);
         assert!(
             errors.iter().any(|e| e.error_code == CHARSHAPE_SPACING),
             "expected CHARSHAPE_SPACING error; got: {errors:?}"
+        );
+    }
+
+    // ── fontsize ───────────────────────────────────────────────────────────────
+
+    #[test]
+    fn fontsize_match_produces_no_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.height = 1000; // 10pt in 0.1pt units
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            fontsize: Some(1000),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().all(|e| e.error_code != CHARSHAPE_FONTSIZE),
+            "no CHARSHAPE_FONTSIZE error expected; got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn fontsize_mismatch_produces_fontsize_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.height = 1200; // 12pt, spec wants 10pt
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            fontsize: Some(1000), // 10pt
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_FONTSIZE),
+            "expected CHARSHAPE_FONTSIZE error; got: {errors:?}"
+        );
+    }
+
+    // ── bold ───────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn bold_match_produces_no_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.bold = false;
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            bold: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().all(|e| e.error_code != CHARSHAPE_BOLD),
+            "no CHARSHAPE_BOLD error expected; got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn bold_mismatch_produces_bold_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.bold = true; // doc is bold, spec wants false
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            bold: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_BOLD),
+            "expected CHARSHAPE_BOLD error; got: {errors:?}"
+        );
+    }
+
+    // ── italic ─────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn italic_mismatch_produces_italic_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.italic = true; // doc is italic, spec wants false
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            italic: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_ITALIC),
+            "expected CHARSHAPE_ITALIC error; got: {errors:?}"
+        );
+    }
+
+    // ── underline ──────────────────────────────────────────────────────────────
+
+    #[test]
+    fn underline_mismatch_produces_underline_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.underline = true; // doc has underline, spec wants false
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            underline: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_UNDERLINE),
+            "expected CHARSHAPE_UNDERLINE error; got: {errors:?}"
+        );
+    }
+
+    // ── strikeout ──────────────────────────────────────────────────────────────
+
+    #[test]
+    fn strikeout_mismatch_produces_strikeout_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.strikeout = true;
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            strikeout: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_STRIKEOUT),
+            "expected CHARSHAPE_STRIKEOUT error; got: {errors:?}"
+        );
+    }
+
+    // ── outline ────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn outline_mismatch_produces_outline_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.outline = true;
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            outline: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_OUTLINE),
+            "expected CHARSHAPE_OUTLINE error; got: {errors:?}"
+        );
+    }
+
+    // ── emboss ─────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn emboss_mismatch_produces_emboss_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.emboss = true;
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            emboss: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_EMBOSS),
+            "expected CHARSHAPE_EMBOSS error; got: {errors:?}"
+        );
+    }
+
+    // ── engrave ────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn engrave_mismatch_produces_engrave_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.engrave = true;
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            engrave: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_ENGRAVE),
+            "expected CHARSHAPE_ENGRAVE error; got: {errors:?}"
+        );
+    }
+
+    // ── shadow ─────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn shadow_mismatch_produces_shadow_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.shadow = true;
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            shadow: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_SHADOW),
+            "expected CHARSHAPE_SHADOW error; got: {errors:?}"
+        );
+    }
+
+    // ── supscript / subscript ──────────────────────────────────────────────────
+
+    #[test]
+    fn supscript_mismatch_produces_supscript_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.supscript = true;
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            supscript: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_SUPSCRIPT),
+            "expected CHARSHAPE_SUPSCRIPT error; got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn subscript_mismatch_produces_subscript_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.subscript = true;
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            subscript: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_SUBSCRIPT),
+            "expected CHARSHAPE_SUBSCRIPT error; got: {errors:?}"
+        );
+    }
+
+    // ── rsize ──────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn rsize_mismatch_produces_rsize_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        let mut rel_sz = LangTuple::<u32>::default();
+        rel_sz.set(FontLang::Hangul, 80); // 80%, spec wants 100%
+        cs.rel_sz = rel_sz;
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            rsize: Some(100),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_RSIZE),
+            "expected CHARSHAPE_RSIZE error; got: {errors:?}"
+        );
+    }
+
+    // ── position ───────────────────────────────────────────────────────────────
+
+    #[test]
+    fn position_mismatch_produces_position_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        let mut offset = LangTuple::<i32>::default();
+        offset.set(FontLang::Hangul, 5); // offset = 5, spec wants 0
+        cs.offset = offset;
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            position: Some(0),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_POSITION),
+            "expected CHARSHAPE_POSITION error; got: {errors:?}"
+        );
+    }
+
+    // ── emptyspace ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn emptyspace_mismatch_produces_emptyspace_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.use_font_space = true; // doc uses font space, spec wants false
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            emptyspace: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_EMPTYSPACE),
+            "expected CHARSHAPE_EMPTYSPACE error; got: {errors:?}"
+        );
+    }
+
+    // ── point ──────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn point_match_produces_no_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.height = 1000; // 10pt
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            point: Some(10.0),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().all(|e| e.error_code != CHARSHAPE_POINT),
+            "no CHARSHAPE_POINT error expected; got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn point_mismatch_produces_point_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.height = 1200; // 12pt, spec wants 10pt
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            point: Some(10.0),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_POINT),
+            "expected CHARSHAPE_POINT error; got: {errors:?}"
+        );
+    }
+
+    // ── kerning ────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn kerning_mismatch_produces_kerning_error() {
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.use_kerning = true; // doc has kerning, spec wants false
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            kerning: Some(false),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_KERNING),
+            "expected CHARSHAPE_KERNING error; got: {errors:?}"
         );
     }
 
@@ -494,9 +1193,7 @@ mod tests {
 
         let spec = CharShapeSpec {
             font: vec!["함초롬바탕".to_string()],
-            ratio: None,
-            spacing: None,
-            langtype: None,
+            ..Default::default()
         };
 
         let errors = check(&spec, &tables, &runs, CheckLevel::Simple);
@@ -517,9 +1214,7 @@ mod tests {
 
         let spec = CharShapeSpec {
             font: vec!["함초롬바탕".to_string()],
-            ratio: None,
-            spacing: None,
-            langtype: None,
+            ..Default::default()
         };
 
         let errors = check(&spec, &tables, &runs, CheckLevel::All);
@@ -551,9 +1246,7 @@ mod tests {
 
         let spec = CharShapeSpec {
             font: vec!["함초롬바탕".to_string()],
-            ratio: None,
-            spacing: None,
-            langtype: None,
+            ..Default::default()
         };
 
         let errors = check(&spec, &tables, &runs, CheckLevel::All);
@@ -569,6 +1262,60 @@ mod tests {
         assert!(
             e.error_code >= 1000 && e.error_code < 2000,
             "error code must be in CharShape range"
+        );
+    }
+
+    // ── bg_border presence check ───────────────────────────────────────────────
+
+    #[test]
+    fn bg_border_absent_when_spec_requires_produces_error() {
+        use crate::spec::CharShapeBorderSpec;
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.border_fill_id_ref = 0; // no border fill referenced
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            border: Some(CharShapeBorderSpec {
+                position: Some(1),
+                bordertype: Some(1),
+                size: Some(0.12),
+                color: Some("#000000".to_string()),
+            }),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().any(|e| e.error_code == CHARSHAPE_BG_BORDER),
+            "expected CHARSHAPE_BG_BORDER error when border_fill_id_ref=0; got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn bg_border_present_with_spec_does_not_produce_error() {
+        use crate::spec::CharShapeBorderSpec;
+        let font_faces = make_font_faces(&[(1, "함초롬바탕")]);
+        let mut cs = make_char_shape(0, 1, 100, 0);
+        cs.border_fill_id_ref = 1; // border fill is referenced
+        let tables = make_tables_with(cs, font_faces);
+        let runs = vec![make_run(0)];
+
+        let spec = CharShapeSpec {
+            border: Some(CharShapeBorderSpec {
+                position: Some(1),
+                bordertype: Some(1),
+                size: Some(0.12),
+                color: Some("#000000".to_string()),
+            }),
+            ..Default::default()
+        };
+
+        let errors = check(&spec, &tables, &runs, CheckLevel::All);
+        assert!(
+            errors.iter().all(|e| e.error_code != CHARSHAPE_BG_BORDER),
+            "no CHARSHAPE_BG_BORDER error expected when border_fill present; got: {errors:?}"
         );
     }
 }
